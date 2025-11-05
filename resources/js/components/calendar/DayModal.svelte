@@ -1,0 +1,77 @@
+<script lang="ts">
+    import { Drawer } from 'vaul-svelte';
+    import GiftContent from './GiftContent.svelte';
+    import ConfettiEffect from './ConfettiEffect.svelte';
+
+    interface CalendarDay {
+        id: number;
+        day_number: number;
+        gift_type: 'text' | 'image_text' | 'product';
+        title: string | null;
+        content_text: string | null;
+        content_image_path: string | null;
+        unlocked_at: string | null;
+    }
+
+    interface Props {
+        day: CalendarDay | null;
+        open?: boolean;
+        onOpenChange?: (open: boolean) => void;
+        justUnlocked?: boolean;
+    }
+
+    let { day, open = $bindable(false), onOpenChange, justUnlocked = $bindable(false) }: Props = $props();
+
+    let triggerConfetti = $state(false);
+
+    $effect(() => {
+        if (open && justUnlocked) {
+            triggerConfetti = true;
+            justUnlocked = false;
+        }
+    });
+</script>
+
+<ConfettiEffect bind:trigger={triggerConfetti} />
+
+<Drawer.Root bind:open onOpenChange={onOpenChange}>
+    <Drawer.Portal>
+        <Drawer.Overlay class="fixed inset-0 bg-black/40" />
+        <Drawer.Content
+            class="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[90vh] flex-col rounded-t-[10px] border bg-white"
+        >
+            <div class="mx-auto mt-4 h-2 w-[100px] rounded-full bg-pink-200"></div>
+
+            <div class="flex-1 overflow-y-auto p-6">
+                {#if day}
+                    <div class="mx-auto max-w-2xl">
+                        <div class="mb-6 flex items-center justify-between">
+                            <h2 class="text-3xl font-bold text-pink-600">
+                                Day {day.day_number}
+                            </h2>
+                            <div class="rounded-full bg-pink-100 px-4 py-2">
+                                <span class="text-sm font-medium text-pink-700">
+                                    {new Date(day.unlocked_at!).toLocaleDateString()}
+                                </span>
+                            </div>
+                        </div>
+
+                        <GiftContent gift={day} />
+                    </div>
+                {/if}
+            </div>
+
+            <div class="border-t p-4">
+                <button
+                    type="button"
+                    onclick={() => (open = false)}
+                    class="w-full rounded-lg bg-pink-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-pink-600"
+                >
+                    Close
+                </button>
+            </div>
+        </Drawer.Content>
+    </Drawer.Portal>
+</Drawer.Root>
+
+
