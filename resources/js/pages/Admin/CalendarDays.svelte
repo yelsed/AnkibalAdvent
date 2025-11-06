@@ -38,12 +38,11 @@
 </script>
 
 <AppLayout
-    title="Manage Calendar Days"
     breadcrumbs={[
-        { label: 'Home', href: '/' },
-        { label: 'Calendars', href: '/calendars' },
-        { label: calendar.title, href: `/calendars/${calendar.id}` },
-        { label: 'Manage', href: `/admin/calendars/${calendar.id}/manage` }
+        { title: 'Home', href: '/' },
+        { title: 'Calendars', href: '/calendars' },
+        { title: calendar.title, href: `/calendars/${calendar.id}` },
+        { title: 'Manage', href: `/admin/calendars/${calendar.id}/manage` }
     ]}
 >
     <div class="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">

@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { router, useForm } from '@inertiajs/svelte';
+    import { router, Form } from '@inertiajs/svelte';
     import AppLayout from '@/layouts/AppLayout.svelte';
     import { Button } from '@/components/ui/button';
     import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -25,28 +25,29 @@
 
     let showCreateDialog = $state(false);
 
-    const form = useForm({
+    let formData = $state({
         title: '',
         year: new Date().getFullYear(),
         description: '',
         theme_color: '#ec4899'
     });
 
-    function submitForm() {
-        form.post('/calendars', {
-            onSuccess: () => {
-                showCreateDialog = false;
-                form.reset();
-            }
-        });
-    }
+    $effect(() => {
+        if (showCreateDialog) {
+            formData = {
+                title: '',
+                year: new Date().getFullYear(),
+                description: '',
+                theme_color: '#ec4899'
+            };
+        }
+    });
 </script>
 
 <AppLayout
-    title="My Advent Calendars"
     breadcrumbs={[
-        { label: 'Home', href: '/' },
-        { label: 'Calendars', href: '/calendars' }
+        { title: 'Home', href: '/' },
+        { title: 'Calendars', href: '/calendars' }
     ]}
 >
     <div class="mx-auto max-w-7xl space-y-8 p-6">
@@ -67,89 +68,109 @@
                     </Button>
                 </DialogTrigger>
                 <DialogContent>
-                    <DialogHeader>
-                        <DialogTitle>Create New Advent Calendar</DialogTitle>
-                        <DialogDescription>
-                            Fill in the details to create a new advent calendar with 31 days.
-                        </DialogDescription>
-                    </DialogHeader>
+                    {#snippet children()}
+                        <DialogHeader>
+                            <DialogTitle>Create New Advent Calendar</DialogTitle>
+                            <DialogDescription>
+                                Fill in the details to create a new advent calendar with 31 days.
+                            </DialogDescription>
+                        </DialogHeader>
+                        <Form
+                            action="/calendars"
+                            method="post"
+                            resetOnSuccess
+                            onSuccess={() => {
+                                showCreateDialog = false;
+                                formData = {
+                                    title: '',
+                                    year: new Date().getFullYear(),
+                                    description: '',
+                                    theme_color: '#ec4899'
+                                };
+                            }}
+                        >
+                            {#snippet children({ errors, processing }: { errors: Record<string, string>; processing: boolean })}
+                                <div class="space-y-4">
+                                    <div>
+                                        <Label for="title">Title</Label>
+                                        <Input
+                                            id="title"
+                                            name="title"
+                                            value={formData.title}
+                                            oninput={(e) => formData.title = e.currentTarget.value}
+                                            placeholder="My Advent Calendar 2025"
+                                            required
+                                        />
+                                        {#if errors.title}
+                                            <p class="mt-1 text-sm text-red-600">{errors.title}</p>
+                                        {/if}
+                                    </div>
 
-                    <form onsubmit={(e) => { e.preventDefault(); submitForm(); }}>
-                        <div class="space-y-4">
-                            <div>
-                                <Label for="title">Title</Label>
-                                <Input
-                                    id="title"
-                                    name="title"
-                                    bind:value={form.data.title}
-                                    placeholder="My Advent Calendar 2025"
-                                    required
-                                />
-                                {#if form.errors.title}
-                                    <p class="mt-1 text-sm text-red-600">{form.errors.title}</p>
-                                {/if}
-                            </div>
+                                    <div>
+                                        <Label for="year">Year</Label>
+                                        <Input
+                                            id="year"
+                                            name="year"
+                                            type="number"
+                                            value={formData.year}
+                                            oninput={(e) => formData.year = Number(e.currentTarget.value)}
+                                            placeholder={new Date().getFullYear().toString()}
+                                            required
+                                        />
+                                        {#if errors.year}
+                                            <p class="mt-1 text-sm text-red-600">{errors.year}</p>
+                                        {/if}
+                                    </div>
 
-                            <div>
-                                <Label for="year">Year</Label>
-                                <Input
-                                    id="year"
-                                    name="year"
-                                    type="number"
-                                    bind:value={form.data.year}
-                                    placeholder={new Date().getFullYear().toString()}
-                                    required
-                                />
-                                {#if form.errors.year}
-                                    <p class="mt-1 text-sm text-red-600">{form.errors.year}</p>
-                                {/if}
-                            </div>
+                                    <div>
+                                        <Label for="description">Description (optional)</Label>
+                                        <Textarea
+                                            id="description"
+                                            name="description"
+                                            value={formData.description}
+                                            oninput={(e) => formData.description = e.currentTarget.value}
+                                            placeholder="A special advent calendar for..."
+                                            rows={3}
+                                        />
+                                        {#if errors.description}
+                                            <p class="mt-1 text-sm text-red-600">{errors.description}</p>
+                                        {/if}
+                                    </div>
 
-                            <div>
-                                <Label for="description">Description (optional)</Label>
-                                <Textarea
-                                    id="description"
-                                    name="description"
-                                    bind:value={form.data.description}
-                                    placeholder="A special advent calendar for..."
-                                    rows={3}
-                                />
-                                {#if form.errors.description}
-                                    <p class="mt-1 text-sm text-red-600">{form.errors.description}</p>
-                                {/if}
-                            </div>
+                                    <div>
+                                        <Label for="theme_color">Theme Color</Label>
+                                        <Input
+                                            id="theme_color"
+                                            name="theme_color"
+                                            type="color"
+                                            value={formData.theme_color}
+                                            oninput={(e) => formData.theme_color = e.currentTarget.value}
+                                        />
+                                        {#if errors.theme_color}
+                                            <p class="mt-1 text-sm text-red-600">{errors.theme_color}</p>
+                                        {/if}
+                                    </div>
 
-                            <div>
-                                <Label for="theme_color">Theme Color</Label>
-                                <Input
-                                    id="theme_color"
-                                    name="theme_color"
-                                    type="color"
-                                    bind:value={form.data.theme_color}
-                                />
-                                {#if form.errors.theme_color}
-                                    <p class="mt-1 text-sm text-red-600">{form.errors.theme_color}</p>
-                                {/if}
-                            </div>
-
-                            <div class="flex justify-end gap-2 pt-4">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    onclick={() => (showCreateDialog = false)}
-                                >
-                                    Cancel
-                                </Button>
-                                <Button
-                                    type="submit"
-                                    disabled={form.processing}
-                                    class="bg-pink-500 hover:bg-pink-600"
-                                >
-                                    {form.processing ? 'Creating...' : 'Create Calendar'}
-                                </Button>
-                            </div>
-                        </div>
-                    </form>
+                                    <div class="flex justify-end gap-2 pt-4">
+                                        <Button
+                                            type="button"
+                                            variant="outline"
+                                            onclick={() => (showCreateDialog = false)}
+                                        >
+                                            Cancel
+                                        </Button>
+                                        <Button
+                                            type="submit"
+                                            disabled={processing}
+                                            class="bg-pink-500 hover:bg-pink-600"
+                                        >
+                                            {processing ? 'Creating...' : 'Create Calendar'}
+                                        </Button>
+                                    </div>
+                                </div>
+                            {/snippet}
+                        </Form>
+                    {/snippet}
                 </DialogContent>
             </Dialog>
         </div>

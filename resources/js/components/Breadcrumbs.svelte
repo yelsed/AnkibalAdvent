@@ -12,13 +12,16 @@
     }
 
     let { breadcrumbs }: Props = $props();
+
+    // Filter out any undefined or invalid items
+    const validBreadcrumbs = $derived(breadcrumbs.filter(item => item && item.title));
 </script>
 
 <Breadcrumb>
     <BreadcrumbList>
-        {#each breadcrumbs as item, index (index)}
+        {#each validBreadcrumbs as item, index (index)}
             <Item>
-                {#if index === breadcrumbs.length - 1}
+                {#if index === validBreadcrumbs.length - 1}
                     <BreadcrumbPage>{item.title}</BreadcrumbPage>
                 {:else}
                     <BreadcrumbLink>
@@ -26,7 +29,7 @@
                     </BreadcrumbLink>
                 {/if}
             </Item>
-            {#if index !== breadcrumbs.length - 1}
+            {#if index !== validBreadcrumbs.length - 1}
                 <BreadcrumbSeparator />
             {/if}
         {/each}

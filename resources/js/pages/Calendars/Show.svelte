@@ -17,6 +17,12 @@
         unlocked_at: string | null;
     }
 
+    interface User {
+        id: number;
+        name: string;
+        email: string;
+    }
+
     interface Calendar {
         id: number;
         title: string;
@@ -24,14 +30,17 @@
         description: string | null;
         theme_color: string;
         days: CalendarDay[];
+        user?: User;
     }
 
     interface Props {
         calendar: Calendar;
         canManage: boolean;
+        isAdmin: boolean;
+        isOwner: boolean;
     }
 
-    let { calendar: initialCalendar, canManage }: Props = $props();
+    let { calendar: initialCalendar, canManage, isAdmin, isOwner }: Props = $props();
 
     // Convert calendar prop to state so we can mutate it reactively
     let calendar = $state(initialCalendar);
@@ -60,6 +69,11 @@
     function canUnlockDay(day: CalendarDay): boolean {
         if (day.unlocked_at) {
             return false;
+        }
+
+        // Admins can always unlock (when debug mode is on, or in admin view)
+        if (isAdmin && debugMode) {
+            return true;
         }
 
         // Debug mode: allow all days to be unlocked
@@ -128,22 +142,62 @@
 </script>
 
 <AppLayout
-    title={calendar.title}
     breadcrumbs={[
-        { label: 'Home', href: '/' },
-        { label: 'Calendars', href: '/calendars' },
-        { label: calendar.title, href: `/calendars/${calendar.id}` }
+        { title: 'Home', href: '/' },
+        { title: 'Calendars', href: '/calendars' },
+        { title: calendar.title, href: `/calendars/${calendar.id}` }
     ]}
 >
     <div class="mx-auto max-w-7xl space-y-8 p-4 sm:p-6">
+        <!-- Admin Banner -->
+        {#if isAdmin && !isOwner}
+            <div class="rounded-lg bg-blue-50 border-2 border-blue-300 p-4">
+                <div class="flex items-center gap-2">
+                    <svg class="h-5 w-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                    </svg>
+                    <div class="flex-1">
+                        <p class="font-semibold text-blue-900">Admin View</p>
+                        <p class="text-sm text-blue-700">
+                            {#if calendar.user}
+                                Viewing calendar owned by <strong>{calendar.user.name}</strong> ({calendar.user.email})
+                            {:else}
+                                Viewing calendar
+                            {/if}
+                        </p>
+                    </div>
+                    <Button
+                        variant="outline"
+                        size="sm"
+                        onclick={() => router.visit('/admin/calendars')}
+                        class="border-blue-300 text-blue-700 hover:bg-blue-100"
+                    >
+                        Back to Admin
+                    </Button>
+                </div>
+            </div>
+        {/if}
+
         <!-- Header -->
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-pink-700 sm:text-4xl">{calendar.title}</h1>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-3xl font-bold text-pink-700 sm:text-4xl">{calendar.title}</h1>
+                    {#if isAdmin}
+                        <span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
+                            ADMIN
+                        </span>
+                    {/if}
+                </div>
                 {#if calendar.description}
                     <p class="mt-2 text-gray-600">{calendar.description}</p>
                 {/if}
-                <p class="mt-1 text-sm text-gray-500">Year: {calendar.year}</p>
+                <div class="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
+                    <span>Year: {calendar.year}</span>
+                    {#if isAdmin && calendar.user}
+                        <span>• Owner: {calendar.user.name}</span>
+                    {/if}
+                </div>
             </div>
 
             <div class="flex gap-2">
@@ -237,6 +291,39 @@
                 <p class="text-sm text-gray-600">Complete</p>
             </div>
         </div>
+
+        <!-- Admin Stats -->
+        {#if isAdmin}
+            <div class="rounded-lg border-2 border-blue-200 bg-blue-50 p-6">
+                <h3 class="mb-4 text-lg font-semibold text-blue-900">Admin Statistics</h3>
+                <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
+                    <div class="text-center">
+                        <p class="text-2xl font-bold text-blue-700">
+                            {calendar.days.filter(d => d.content_text && d.content_text !== 'This gift hasn\'t been set up yet.').length}
+                        </p>
+                        <p class="text-xs text-blue-600">Days with Content</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-2xl font-bold text-blue-700">
+                            {calendar.days.filter(d => d.gift_type === 'image_text').length}
+                        </p>
+                        <p class="text-xs text-blue-600">Image Days</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-2xl font-bold text-blue-700">
+                            {calendar.days.filter(d => d.gift_type === 'product').length}
+                        </p>
+                        <p class="text-xs text-blue-600">Product Days</p>
+                    </div>
+                    <div class="text-center">
+                        <p class="text-2xl font-bold text-blue-700">
+                            {calendar.days.filter(d => !d.content_text || d.content_text === 'This gift hasn\'t been set up yet.').length}
+                        </p>
+                        <p class="text-xs text-blue-600">Days to Setup</p>
+                    </div>
+                </div>
+            </div>
+        {/if}
     </div>
 
     <!-- Day Modal -->

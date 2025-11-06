@@ -25,6 +25,12 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Admin routes
     Route::middleware('can:admin')->group(function () {
+        Route::get('admin/calendars', [AdminController::class, 'index'])
+            ->name('admin.calendars.index');
+
+        Route::post('admin/calendars', [AdminController::class, 'store'])
+            ->name('admin.calendars.store');
+
         Route::get('admin/calendars/{calendar}/manage', [AdminController::class, 'manageCalendar'])
             ->name('admin.calendars.manage');
 

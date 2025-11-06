@@ -21,12 +21,32 @@ class StoreCalendarRequest extends FormRequest
      */
     public function rules(): array
     {
-        return [
+        $rules = [
             'title' => ['required', 'string', 'max:255'],
             'year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'description' => ['nullable', 'string', 'max:1000'],
             'theme_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
         ];
+
+        // Admins can specify user_id, regular users get their own id
+        if ($this->user()?->is_admin) {
+            $rules['user_id'] = ['required', 'exists:users,id'];
+        }
+
+        return $rules;
+    }
+
+    /**
+     * Prepare the data for validation.
+     */
+    protected function prepareForValidation(): void
+    {
+        // If not admin, set user_id to current user
+        if (!$this->user()?->is_admin) {
+            $this->merge([
+                'user_id' => $this->user()->id,
+            ]);
+        }
     }
 
     /**

@@ -20,6 +20,11 @@ class CalendarPolicy
      */
     public function view(User $user, Calendar $calendar): bool
     {
+        // Admins can view all calendars
+        if ($user->is_admin) {
+            return true;
+        }
+
         return $user->id === $calendar->user_id;
     }
 
@@ -36,6 +41,11 @@ class CalendarPolicy
      */
     public function update(User $user, Calendar $calendar): bool
     {
+        // Admins can update all calendars
+        if ($user->is_admin) {
+            return true;
+        }
+
         return $user->id === $calendar->user_id;
     }
 

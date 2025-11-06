@@ -4,9 +4,12 @@
     import NavUser from '@/components/NavUser.svelte';
     import { Sidebar, SidebarContent, SidebarFooter, SidebarHeader, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
     import { type NavItem } from '@/types';
-    import { Link } from '@inertiajs/svelte';
-    import { BookOpen, Calendar, Folder, LayoutGrid } from 'lucide-svelte';
+    import { Link, page } from '@inertiajs/svelte';
+    import { BookOpen, Calendar, Folder, LayoutGrid, Settings } from 'lucide-svelte';
     import AppLogo from './AppLogo.svelte';
+
+    const user = $derived($page.props.auth.user);
+    const isAdmin = $derived(user?.is_admin ?? false);
 
     const mainNavItems: NavItem[] = [
         {
@@ -18,6 +21,14 @@
             title: 'Advent Calendars',
             href: '/calendars',
             icon: Calendar,
+        },
+    ];
+
+    const adminNavItems: NavItem[] = [
+        {
+            title: 'Calendar Management',
+            href: '/admin/calendars',
+            icon: Settings,
         },
     ];
 
@@ -50,6 +61,9 @@
 
     <SidebarContent>
         <NavMain items={mainNavItems} />
+        {#if isAdmin}
+            <NavMain items={adminNavItems} />
+        {/if}
     </SidebarContent>
 
     <SidebarFooter>

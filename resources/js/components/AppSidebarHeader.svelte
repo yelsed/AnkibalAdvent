@@ -8,6 +8,9 @@
     }
 
     let { breadcrumbs = [] }: Props = $props();
+
+    // Filter out any undefined or invalid breadcrumb items
+    const validBreadcrumbs = $derived(breadcrumbs.filter(item => item && item.title));
 </script>
 
 <header
@@ -16,8 +19,8 @@
     <div class="flex items-center gap-2">
         <SidebarTrigger class="-ml-1" />
 
-        {#if breadcrumbs.length > 0}
-            <Breadcrumbs {breadcrumbs} />
+        {#if validBreadcrumbs.length > 0}
+            <Breadcrumbs breadcrumbs={validBreadcrumbs} />
         {/if}
     </div>
 </header>

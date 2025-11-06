@@ -59,11 +59,16 @@ class CalendarController extends Controller
 
         $calendar->load(['days' => function ($query) {
             $query->orderBy('day_number');
-        }]);
+        }, 'user']);
+
+        $isAdmin = auth()->user()->is_admin;
+        $isOwner = auth()->user()->id === $calendar->user_id;
 
         return Inertia::render('Calendars/Show', [
             'calendar' => $calendar,
-            'canManage' => auth()->user()->is_admin,
+            'canManage' => $isAdmin,
+            'isAdmin' => $isAdmin,
+            'isOwner' => $isOwner,
         ]);
     }
 
