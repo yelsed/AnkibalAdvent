@@ -1,0 +1,134 @@
+# Advent Calendar Project Rules
+
+## Project Overview
+This is a Laravel + Svelte Inertia 2.0 application for creating personalized advent calendars with 31 days. Users can create multiple calendars, and admins can manage the gift content for each day.
+
+## Tech Stack
+- **Backend**: Laravel 12, MySQL database
+- **Frontend**: Svelte 5 (with runes), Inertia 2.0, Tailwind CSS 4
+- **UI Components**: shadcn-svelte, vaul-svelte (for modals)
+- **Special Effects**: canvas-confetti for celebration animations
+- **Testing**: Pest 4 (including browser tests)
+
+## Domain-Specific Rules
+
+### Calendar System
+- Each calendar has exactly 31 days (full December coverage)
+- Days can only be unlocked in December, and only up to the current date
+- Once unlocked, a day shows confetti animation and reveals the gift content
+- Three gift types: text, image_text, product
+
+### User Roles
+- Regular users: can create their own calendars and view/unlock days
+- Admins: have `is_admin` flag, can manage gift content for any calendar
+
+### Pink Theme
+- Primary colors: #ec4899, #f472b6, #fb7185, #f9a8d4, #fce7f3
+- Use Tailwind pink-* utility classes throughout
+- Festive, warm, motherly aesthetic
+
+## Svelte 5 Guidelines
+
+### Always Use Runes
+```svelte
+// State
+let count = $state(0);
+let items = $state([]);
+
+// Derived
+let doubled = $derived(count * 2);
+
+// Props
+let { title, items = [] } = $props();
+
+// Effects
+$effect(() => {
+    console.log('Count changed:', count);
+});
+
+// Bindable props (two-way binding)
+let { open = $bindable(false) } = $props();
+```
+
+### Event Handlers
+Use lowercase `onclick`, `onsubmit`, etc.:
+```svelte
+<button onclick={() => handleClick()}>Click</button>
+```
+
+### Snippets (not slots)
+```svelte
+{#snippet children({ data, errors })}
+    <input bind:value={data.name} />
+{/snippet}
+```
+
+## Inertia 2.0 Guidelines
+
+### Form Component
+Prefer the `<Form>` component over `useForm()`:
+```svelte
+<Form action="/calendars" method="post">
+    {#snippet children({ data, errors, processing })}
+        <input bind:value={data.title} />
+        <button type="submit" disabled={processing}>Submit</button>
+    {/snippet}
+</Form>
+```
+
+### Navigation
+```svelte
+import { router } from '@inertiajs/svelte';
+
+router.visit('/calendars');
+```
+
+## Component Organization
+
+### Calendar Components
+- `DayCard.svelte`: Shows day number with gift wrap for locked, gradient for unlocked
+- `DayModal.svelte`: Uses vaul-svelte Drawer for mobile-friendly modal
+- `GiftContent.svelte`: Renders different gift types appropriately
+- `ConfettiEffect.svelte`: Manages canvas-confetti animations
+
+### File Locations
+- Pages: `resources/js/pages/Calendars/*.svelte`, `resources/js/pages/Admin/*.svelte`
+- Components: `resources/js/components/calendar/*.svelte`
+- Layouts: Use existing `AppLayout.svelte`
+
+## Backend Patterns
+
+### Authorization
+Always authorize in controllers:
+```php
+$this->authorize('view', $calendar);
+```
+
+### Date Validation
+Business logic in CalendarDay model:
+- `canBeUnlocked()`: checks if day can be unlocked
+- `isUnlocked()`: checks if already unlocked
+
+### Image Handling
+Store in `storage/app/public/calendar_images`, ensure storage link exists
+
+## Mobile-First Design
+- Grid: 2 cols mobile, 4 cols tablet, 6 cols desktop
+- Touch-friendly tap targets (min 44x44px)
+- Use vaul-svelte Drawer for modals on mobile
+- Test responsive breakpoints
+
+## Testing Strategy
+- Feature tests for all CRUD operations
+- Test authorization/policy enforcement
+- Test day unlocking business logic
+- Browser tests for user flows (unlock day, see confetti, view modal)
+
+## Code Quality
+- Use descriptive variable/function names
+- DRY principle - extract repeated patterns
+- Server-side computation preferred over client-side
+- Type safety with TypeScript interfaces
+- Follow existing conventions in the codebase
+
+
