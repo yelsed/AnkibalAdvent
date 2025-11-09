@@ -8,13 +8,18 @@ const getMediaQuery = () => (typeof window !== 'undefined' ? window.matchMedia('
 // Initialize theme only in browser environments
 if (typeof window !== 'undefined' && typeof document !== 'undefined') {
     const savedAppearance = localStorage.getItem('appearance') as Appearance | null;
-    const appearance = savedAppearance || 'system';
+    const appearance = savedAppearance || 'light';
 
     if (appearance === 'system') {
         const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.classList.toggle('dark', systemTheme === 'dark');
     } else {
-        document.documentElement.classList.toggle('dark', appearance === 'dark');
+        // Explicitly set dark class based on appearance value
+        if (appearance === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
     }
 }
 
@@ -26,7 +31,12 @@ export function updateTheme(value: Appearance) {
         const systemTheme = window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
         document.documentElement.classList.toggle('dark', systemTheme === 'dark');
     } else {
-        document.documentElement.classList.toggle('dark', value === 'dark');
+        // Explicitly set dark class based on appearance value
+        if (value === 'dark') {
+            document.documentElement.classList.add('dark');
+        } else {
+            document.documentElement.classList.remove('dark');
+        }
     }
 }
 
@@ -35,7 +45,7 @@ const handleSystemThemeChange = () => {
     if (typeof window === 'undefined') return;
 
     const currentAppearance = localStorage.getItem('appearance') as Appearance | null;
-    updateTheme(currentAppearance || 'system');
+    updateTheme(currentAppearance || 'light');
 };
 
 export function initializeTheme() {
@@ -43,7 +53,7 @@ export function initializeTheme() {
     if (typeof window === 'undefined' || typeof document === 'undefined') return;
 
     const savedAppearance = localStorage.getItem('appearance') as Appearance | null;
-    updateTheme(savedAppearance || 'system');
+    updateTheme(savedAppearance || 'light');
 
     const mediaQuery = getMediaQuery();
     mediaQuery?.addEventListener('change', handleSystemThemeChange);
@@ -53,8 +63,8 @@ export function useAppearance() {
     // Get saved appearance from localStorage
     const savedAppearance = typeof localStorage !== 'undefined' ? (localStorage.getItem('appearance') as Appearance | null) : null;
 
-    // Initialize with saved appearance or default to system
-    let appearance = $state(savedAppearance || 'system');
+    // Initialize with saved appearance or default to light
+    let appearance = $state(savedAppearance || 'light');
 
     onMount(() => {
         // Initialize theme

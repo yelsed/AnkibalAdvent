@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { router, Form } from '@inertiajs/svelte';
+    import { router, Form, page } from '@inertiajs/svelte';
     import AppLayout from '@/layouts/AppLayout.svelte';
     import { Button } from '@/components/ui/button';
     import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -23,23 +23,16 @@
 
     let { calendars }: Props = $props();
 
+    const user = $derived($page.props.auth.user);
+    const isAdmin = $derived(user?.is_admin ?? false);
+
     let showCreateDialog = $state(false);
+    let formKey = $state(0);
 
-    let formData = $state({
-        title: '',
-        year: new Date().getFullYear(),
-        description: '',
-        theme_color: '#ec4899'
-    });
-
+    // Reset form when dialog opens
     $effect(() => {
         if (showCreateDialog) {
-            formData = {
-                title: '',
-                year: new Date().getFullYear(),
-                description: '',
-                theme_color: '#ec4899'
-            };
+            formKey++;
         }
     });
 </script>
@@ -55,10 +48,13 @@
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-4xl font-bold text-pink-700">🎄 My Advent Calendars</h1>
-                <p class="mt-2 text-gray-600">Create and manage your festive advent calendars</p>
+                <p class="mt-2 text-gray-600">
+                    {isAdmin ? 'Create and manage your festive advent calendars' : 'View your advent calendars'}
+                </p>
             </div>
 
-            <Dialog bind:open={showCreateDialog}>
+            {#if isAdmin}
+                <Dialog bind:open={showCreateDialog}>
                 <DialogTrigger>
                     <Button class="bg-pink-500 hover:bg-pink-600">
                         <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,20 +71,15 @@
                                 Fill in the details to create a new advent calendar with 31 days.
                             </DialogDescription>
                         </DialogHeader>
-                        <Form
-                            action="/calendars"
-                            method="post"
-                            resetOnSuccess
-                            onSuccess={() => {
-                                showCreateDialog = false;
-                                formData = {
-                                    title: '',
-                                    year: new Date().getFullYear(),
-                                    description: '',
-                                    theme_color: '#ec4899'
-                                };
-                            }}
-                        >
+                        {#key formKey}
+                            <Form
+                                action="/calendars"
+                                method="post"
+                                resetOnSuccess
+                                onSuccess={() => {
+                                    showCreateDialog = false;
+                                }}
+                            >
                             {#snippet children({ errors, processing }: { errors: Record<string, string>; processing: boolean })}
                                 <div class="space-y-4">
                                     <div>
@@ -96,8 +87,7 @@
                                         <Input
                                             id="title"
                                             name="title"
-                                            value={formData.title}
-                                            oninput={(e) => formData.title = e.currentTarget.value}
+                                            defaultValue=""
                                             placeholder="My Advent Calendar 2025"
                                             required
                                         />
@@ -112,8 +102,7 @@
                                             id="year"
                                             name="year"
                                             type="number"
-                                            value={formData.year}
-                                            oninput={(e) => formData.year = Number(e.currentTarget.value)}
+                                            defaultValue={new Date().getFullYear().toString()}
                                             placeholder={new Date().getFullYear().toString()}
                                             required
                                         />
@@ -127,8 +116,7 @@
                                         <Textarea
                                             id="description"
                                             name="description"
-                                            value={formData.description}
-                                            oninput={(e) => formData.description = e.currentTarget.value}
+                                            defaultValue=""
                                             placeholder="A special advent calendar for..."
                                             rows={3}
                                         />
@@ -143,8 +131,7 @@
                                             id="theme_color"
                                             name="theme_color"
                                             type="color"
-                                            value={formData.theme_color}
-                                            oninput={(e) => formData.theme_color = e.currentTarget.value}
+                                            defaultValue="#ec4899"
                                         />
                                         {#if errors.theme_color}
                                             <p class="mt-1 text-sm text-red-600">{errors.theme_color}</p>
@@ -169,10 +156,12 @@
                                     </div>
                                 </div>
                             {/snippet}
-                        </Form>
+                            </Form>
+                        {/key}
                     {/snippet}
                 </DialogContent>
             </Dialog>
+            {/if}
         </div>
 
         <!-- Calendars Grid -->

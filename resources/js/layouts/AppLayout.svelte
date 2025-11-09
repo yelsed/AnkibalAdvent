@@ -1,7 +1,9 @@
 <script lang="ts">
-    import AppLayout from '@/layouts/app/AppSidebarLayout.svelte';
+    import AppSidebarLayout from '@/layouts/app/AppSidebarLayout.svelte';
+    import SimpleLayout from '@/layouts/app/SimpleLayout.svelte';
     import type { BreadcrumbItemType } from '@/types';
     import type { Snippet } from 'svelte';
+    import { page } from '@inertiajs/svelte';
 
     interface Props {
         breadcrumbs?: BreadcrumbItemType[];
@@ -9,8 +11,17 @@
     }
 
     let { breadcrumbs = [], children }: Props = $props();
+
+    const user = $derived($page.props.auth.user);
+    const isAdmin = $derived(user?.is_admin ?? false);
 </script>
 
-<AppLayout {breadcrumbs}>
-    {@render children?.()}
-</AppLayout>
+{#if isAdmin}
+    <AppSidebarLayout {breadcrumbs}>
+        {@render children?.()}
+    </AppSidebarLayout>
+{:else}
+    <SimpleLayout>
+        {@render children?.()}
+    </SimpleLayout>
+{/if}

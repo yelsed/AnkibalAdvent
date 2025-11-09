@@ -160,4 +160,63 @@ test('calendar day update requires image for image_text type', function () {
     $response->assertSessionHasErrors('content_image');
 });
 
+test('admin can unlock any day regardless of date restrictions', function () {
+    // Mock December 5th
+    $this->travelTo(now()->setMonth(12)->setDay(5));
 
+    $admin = User::factory()->create(['is_admin' => true]);
+    $calendar = Calendar::factory()->create(['user_id' => $admin->id]);
+    $day = CalendarDay::factory()->create([
+        'calendar_id' => $calendar->id,
+        'day_number' => 31, // Future day
+        'unlocked_at' => null,
+    ]);
+
+    $response = $this->actingAs($admin)->postJson("/calendar-days/{$day->id}/unlock");
+
+    $response->assertSuccessful();
+    $response->assertJsonStructure(['message', 'day']);
+
+    $day->refresh();
+    expect($day->unlocked_at)->not->toBeNull();
+});
+
+test('admin can unlock days outside of December', function () {
+    // Mock November 30th
+    $this->travelTo(now()->setMonth(11)->setDay(30));
+
+    $admin = User::factory()->create(['is_admin' => true]);
+    $calendar = Calendar::factory()->create(['user_id' => $admin->id]);
+    $day = CalendarDay::factory()->create([
+        'calendar_id' => $calendar->id,
+        'day_number' => 1,
+        'unlocked_at' => null,
+    ]);
+
+    $response = $this->actingAs($admin)->postJson("/calendar-days/{$day->id}/unlock");
+
+    $response->assertSuccessful();
+
+    $day->refresh();
+    expect($day->unlocked_at)->not->toBeNull();
+});
+
+test('admin can unlock days from calendars they do not own', function () {
+    $this->travelTo(now()->setMonth(12)->setDay(5));
+
+    $owner = User::factory()->create();
+    $admin = User::factory()->create(['is_admin' => true]);
+    $calendar = Calendar::factory()->create(['user_id' => $owner->id]);
+    $day = CalendarDay::factory()->create([
+        'calendar_id' => $calendar->id,
+        'day_number' => 31, // Future day
+        'unlocked_at' => null,
+    ]);
+
+    $response = $this->actingAs($admin)->postJson("/calendar-days/{$day->id}/unlock");
+
+    $response->assertSuccessful();
+
+    $day->refresh();
+    expect($day->unlocked_at)->not->toBeNull();
+});

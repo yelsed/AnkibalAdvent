@@ -24,8 +24,10 @@ class UpdateCalendarDayRequest extends FormRequest
         return [
             'gift_type' => ['required', 'in:text,image_text,product'],
             'title' => ['nullable', 'string', 'max:255'],
-            'content_text' => ['required_if:gift_type,text', 'required_if:gift_type,product', 'nullable', 'string'],
-            'content_image' => ['required_if:gift_type,image_text', 'nullable', 'image', 'max:5120'],
+            'content_text' => ['required_if:gift_type,text', 'required_if:gift_type,image_text', 'nullable', 'string'],
+            'content_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
+            'product_code' => ['required_if:gift_type,product', 'nullable', 'string', 'max:255'],
+            'audio_url' => ['nullable', 'url', 'max:2048'],
         ];
     }
 
@@ -40,9 +42,10 @@ class UpdateCalendarDayRequest extends FormRequest
             'gift_type.required' => 'Please select a gift type.',
             'gift_type.in' => 'The selected gift type is invalid.',
             'content_text.required_if' => 'Content text is required for this gift type.',
-            'content_image.required_if' => 'An image is required for this gift type.',
             'content_image.image' => 'The file must be an image.',
+            'content_image.mimes' => 'The image must be a file of type: jpeg, jpg, png, gif, or webp.',
             'content_image.max' => 'The image size cannot exceed 5MB.',
+            'product_code.required_if' => 'Product code is required for product/coupon type.',
         ];
     }
 }

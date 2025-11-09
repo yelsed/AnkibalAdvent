@@ -4,6 +4,7 @@
     import AppLayout from '@/layouts/AppLayout.svelte';
     import DayCard from '@/components/calendar/DayCard.svelte';
     import DayModal from '@/components/calendar/DayModal.svelte';
+    import AudioPlayer from '@/components/calendar/AudioPlayer.svelte';
     import { Button } from '@/components/ui/button';
     import { toast } from 'svelte-sonner';
 
@@ -14,6 +15,8 @@
         title: string | null;
         content_text: string | null;
         content_image_path: string | null;
+        product_code: string | null;
+        audio_url: string | null;
         unlocked_at: string | null;
     }
 
@@ -29,6 +32,7 @@
         year: number;
         description: string | null;
         theme_color: string;
+        audio_url: string | null;
         days: CalendarDay[];
         user?: User;
     }
@@ -256,6 +260,14 @@
                 <p class="text-pink-700">
                     You can unlock days 1-{currentDay} now! 🎅
                 </p>
+            </div>
+        {/if}
+
+        <!-- Calendar Audio -->
+        {#if calendar.audio_url}
+            <div class="rounded-lg border border-pink-200 bg-pink-50 p-4">
+                <h3 class="mb-3 text-lg font-semibold text-pink-700">Calendar Music</h3>
+                <AudioPlayer audioUrl={calendar.audio_url} loop={true} />
             </div>
         {/if}
 

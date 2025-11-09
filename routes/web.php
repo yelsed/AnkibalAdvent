@@ -3,6 +3,7 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CalendarDayController;
+use App\Http\Controllers\InvitationController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -12,7 +13,13 @@ Route::get('/', function () {
 
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+})->middleware(['auth', 'verified', 'can:admin'])->name('dashboard');
+
+// Invitation routes (public)
+Route::get('invitations/{token}/accept', [InvitationController::class, 'accept'])
+    ->name('invitations.accept');
+Route::post('invitations/accept', [InvitationController::class, 'store'])
+    ->name('invitations.store');
 
 // Calendar routes
 Route::middleware(['auth', 'verified'])->group(function () {

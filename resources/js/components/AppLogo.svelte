@@ -7,6 +7,6 @@
         <AppLogoIcon class="size-5 fill-current text-white! dark:text-black!" />
     </div>
     <div class="flex items-center">
-        <span class="truncate text-sm font-semibold">Laravel Starter Kit</span>
+        <span class="truncate text-sm font-semibold">AnkiBal Advent</span>
     </div>
 </div>

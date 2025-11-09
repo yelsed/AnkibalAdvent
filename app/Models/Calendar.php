@@ -18,6 +18,7 @@ class Calendar extends Model
         'year',
         'description',
         'theme_color',
+        'audio_url',
     ];
 
     protected function casts(): array

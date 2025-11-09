@@ -2,6 +2,7 @@
     import { Drawer } from 'vaul-svelte';
     import GiftContent from './GiftContent.svelte';
     import ConfettiEffect from './ConfettiEffect.svelte';
+    import AudioPlayer from './AudioPlayer.svelte';
 
     interface CalendarDay {
         id: number;
@@ -10,6 +11,8 @@
         title: string | null;
         content_text: string | null;
         content_image_path: string | null;
+        product_code: string | null;
+        audio_url: string | null;
         unlocked_at: string | null;
     }
 
@@ -56,6 +59,12 @@
                             </div>
                         </div>
 
+                        {#if day.audio_url}
+                            <div class="mb-6">
+                                <AudioPlayer audioUrl={day.audio_url} />
+                            </div>
+                        {/if}
+
                         <GiftContent gift={day} />
                     </div>
                 {/if}
@@ -73,5 +82,3 @@
         </Drawer.Content>
     </Drawer.Portal>
 </Drawer.Root>
-
-

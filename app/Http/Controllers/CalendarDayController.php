@@ -7,6 +7,8 @@ use App\Models\CalendarDay;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
 
 class CalendarDayController extends Controller
@@ -27,7 +29,7 @@ class CalendarDayController extends Controller
             ]);
         }
 
-        if (! $calendarDay->canBeUnlocked()) {
+        if (! $calendarDay->canBeUnlocked(Auth::user())) {
             return response()->json([
                 'message' => 'This day cannot be unlocked yet.',
             ], 403);
@@ -46,21 +48,50 @@ class CalendarDayController extends Controller
      */
     public function update(UpdateCalendarDayRequest $request, CalendarDay $calendarDay): RedirectResponse
     {
+        // Debug: check what's coming in
+        Log::info('Update request received', [
+            'has_file' => $request->hasFile('content_image'),
+            'all_files' => $request->allFiles(),
+            'all_input' => $request->all(),
+        ]);
+
+        // Use validated() to ensure only valid data is used
         $data = $request->validated();
 
+        // Handle image upload - this must be done separately to ensure it's always processed
         if ($request->hasFile('content_image')) {
+            $file = $request->file('content_image');
+
+            Log::info('File received', [
+                'name' => $file->getClientOriginalName(),
+                'size' => $file->getSize(),
+                'mime' => $file->getMimeType(),
+            ]);
+
             // Delete old image if exists
             if ($calendarDay->content_image_path) {
                 Storage::disk('public')->delete($calendarDay->content_image_path);
             }
 
             // Store new image
-            $path = $request->file('content_image')->store('calendar_images', 'public');
+            $path = $file->store('calendar_images', 'public');
             $data['content_image_path'] = $path;
+
+            Log::info('Image stored', ['path' => $path]);
+        } else {
+            Log::warning('No file received in request');
         }
 
+        // Remove content_image from data array as it's not a database field
+        unset($data['content_image']);
+
+        // Always update, even if only image was uploaded
         $calendarDay->update($data);
 
-        return back()->with('success', 'Day updated successfully!');
+        // Refresh the calendar day to ensure we have the latest data
+        $calendarDay->refresh();
+
+        return redirect()->route('admin.calendars.manage', $calendarDay->calendar)
+            ->with('success', 'Day updated successfully!');
     }
 }

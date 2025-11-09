@@ -18,6 +18,8 @@ class CalendarDay extends Model
         'title',
         'content_text',
         'content_image_path',
+        'product_code',
+        'audio_url',
         'unlocked_at',
     ];
 
@@ -39,11 +41,21 @@ class CalendarDay extends Model
         return $this->unlocked_at !== null;
     }
 
-    public function canBeUnlocked(): bool
+    public function canBeUnlocked(?User $user = null): bool
     {
+        // If already unlocked, cannot unlock again
+        if ($this->isUnlocked()) {
+            return false;
+        }
+
+        // Admins can always unlock any day
+        if ($user && $user->is_admin) {
+            return true;
+        }
+
         // Debug mode: allow all days to be unlocked
         if (config('app.calendar_debug_mode')) {
-            return ! $this->isUnlocked();
+            return true;
         }
 
         $currentDay = now()->day;
@@ -54,7 +66,7 @@ class CalendarDay extends Model
             return false;
         }
 
-        // Can only unlock if day_number <= current day AND not already unlocked
-        return $this->day_number <= $currentDay && ! $this->isUnlocked();
+        // Can only unlock if day_number <= current day
+        return $this->day_number <= $currentDay;
     }
 }

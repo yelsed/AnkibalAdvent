@@ -26,11 +26,14 @@ class StoreCalendarRequest extends FormRequest
             'year' => ['required', 'integer', 'min:2000', 'max:2100'],
             'description' => ['nullable', 'string', 'max:1000'],
             'theme_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'audio_url' => ['nullable', 'url', 'max:2048'],
         ];
 
-        // Admins can specify user_id, regular users get their own id
+        // Admins can specify user_id OR email (for new users)
         if ($this->user()?->is_admin) {
-            $rules['user_id'] = ['required', 'exists:users,id'];
+            $rules['user_id'] = ['nullable', 'required_without:email', 'exists:users,id'];
+            $rules['email'] = ['nullable', 'required_without:user_id', 'email', 'max:255'];
+            $rules['name'] = ['nullable', 'required_with:email', 'string', 'max:255'];
         }
 
         return $rules;
