@@ -5,8 +5,8 @@ use App\Models\CalendarDay;
 use App\Models\User;
 
 test('user can unlock a day in December when day number is reached', function () {
-    // Mock December 10th
-    $this->travelTo(now()->setMonth(12)->setDay(10));
+    // Mock December 10th at 07:00
+    $this->travelTo(now()->setMonth(12)->setDay(10)->setTime(7, 0));
 
     $user = User::factory()->create();
     $calendar = Calendar::factory()->create(['user_id' => $user->id]);
@@ -26,8 +26,8 @@ test('user can unlock a day in December when day number is reached', function ()
 });
 
 test('user cannot unlock a future day', function () {
-    // Mock December 5th
-    $this->travelTo(now()->setMonth(12)->setDay(5));
+    // Mock December 5th at 07:00
+    $this->travelTo(now()->setMonth(12)->setDay(5)->setTime(7, 0));
 
     $user = User::factory()->create();
     $calendar = Calendar::factory()->create(['user_id' => $user->id]);
@@ -82,7 +82,7 @@ test('unlocking an already unlocked day returns the day data', function () {
 });
 
 test('user cannot unlock days from another users calendar', function () {
-    $this->travelTo(now()->setMonth(12)->setDay(10));
+    $this->travelTo(now()->setMonth(12)->setDay(10)->setTime(7, 0));
 
     $user1 = User::factory()->create();
     $user2 = User::factory()->create();
@@ -96,6 +96,87 @@ test('user cannot unlock days from another users calendar', function () {
     $response = $this->actingAs($user2)->postJson("/calendar-days/{$day->id}/unlock");
 
     $response->assertForbidden();
+});
+
+test('user cannot unlock a day before 07:00 on that day', function () {
+    // Mock December 10th at 06:59
+    $this->travelTo(now()->setMonth(12)->setDay(10)->setTime(6, 59));
+
+    $user = User::factory()->create();
+    $calendar = Calendar::factory()->create(['user_id' => $user->id]);
+    $day = CalendarDay::factory()->create([
+        'calendar_id' => $calendar->id,
+        'day_number' => 10,
+        'unlocked_at' => null,
+    ]);
+
+    $response = $this->actingAs($user)->postJson("/calendar-days/{$day->id}/unlock");
+
+    $response->assertForbidden();
+
+    $day->refresh();
+    expect($day->unlocked_at)->toBeNull();
+});
+
+test('user can unlock a day at 07:00 on that day', function () {
+    // Mock December 10th at 07:00
+    $this->travelTo(now()->setMonth(12)->setDay(10)->setTime(7, 0));
+
+    $user = User::factory()->create();
+    $calendar = Calendar::factory()->create(['user_id' => $user->id]);
+    $day = CalendarDay::factory()->create([
+        'calendar_id' => $calendar->id,
+        'day_number' => 10,
+        'unlocked_at' => null,
+    ]);
+
+    $response = $this->actingAs($user)->postJson("/calendar-days/{$day->id}/unlock");
+
+    $response->assertSuccessful();
+    $response->assertJsonStructure(['message', 'day']);
+
+    $day->refresh();
+    expect($day->unlocked_at)->not->toBeNull();
+});
+
+test('user can unlock a day after 07:00 on that day', function () {
+    // Mock December 10th at 10:30
+    $this->travelTo(now()->setMonth(12)->setDay(10)->setTime(10, 30));
+
+    $user = User::factory()->create();
+    $calendar = Calendar::factory()->create(['user_id' => $user->id]);
+    $day = CalendarDay::factory()->create([
+        'calendar_id' => $calendar->id,
+        'day_number' => 10,
+        'unlocked_at' => null,
+    ]);
+
+    $response = $this->actingAs($user)->postJson("/calendar-days/{$day->id}/unlock");
+
+    $response->assertSuccessful();
+
+    $day->refresh();
+    expect($day->unlocked_at)->not->toBeNull();
+});
+
+test('user can unlock previous days after 07:00', function () {
+    // Mock December 10th at 08:00 - can unlock day 9
+    $this->travelTo(now()->setMonth(12)->setDay(10)->setTime(8, 0));
+
+    $user = User::factory()->create();
+    $calendar = Calendar::factory()->create(['user_id' => $user->id]);
+    $day = CalendarDay::factory()->create([
+        'calendar_id' => $calendar->id,
+        'day_number' => 9,
+        'unlocked_at' => null,
+    ]);
+
+    $response = $this->actingAs($user)->postJson("/calendar-days/{$day->id}/unlock");
+
+    $response->assertSuccessful();
+
+    $day->refresh();
+    expect($day->unlocked_at)->not->toBeNull();
 });
 
 test('admin can update calendar day content', function () {

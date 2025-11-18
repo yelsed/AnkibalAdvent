@@ -39,9 +39,9 @@
 
 <Drawer.Root bind:open onOpenChange={onOpenChange}>
     <Drawer.Portal>
-        <Drawer.Overlay class="fixed inset-0 bg-black/40" />
+        <Drawer.Overlay class="fixed inset-0 z-[100] bg-black/40" />
         <Drawer.Content
-            class="fixed inset-x-0 bottom-0 z-50 mt-24 flex h-auto max-h-[90vh] flex-col rounded-t-[10px] border bg-white"
+            class="fixed inset-x-0 bottom-0 z-[100] mt-24 flex h-auto max-h-[90vh] flex-col rounded-t-[10px] border bg-white"
         >
             <div class="mx-auto mt-4 h-2 w-[100px] rounded-full bg-pink-200"></div>
 

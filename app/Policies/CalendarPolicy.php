@@ -33,8 +33,8 @@ class CalendarPolicy
      */
     public function create(User $user): bool
     {
-        // Only admins can create calendars
-        return $user->is_admin;
+        // All authenticated users can create calendars
+        return true;
     }
 
     /**
@@ -55,8 +55,13 @@ class CalendarPolicy
      */
     public function delete(User $user, Calendar $calendar): bool
     {
-        // Only admins can delete calendars
-        return $user->is_admin;
+        // Admins can delete all calendars
+        if ($user->is_admin) {
+            return true;
+        }
+
+        // Users can delete their own calendars
+        return $user->id === $calendar->user_id;
     }
 
     /**

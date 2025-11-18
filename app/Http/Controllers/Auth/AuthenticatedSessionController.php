@@ -37,7 +37,14 @@ class AuthenticatedSessionController extends Controller
         $user = $request->user();
         $intended = $request->session()->pull('url.intended');
 
+        // Only use intended URL if it's safe for this user
         if ($intended) {
+            // If intended is dashboard and user is not admin, redirect to calendars instead
+            if (str_contains($intended, '/dashboard') && !$user->is_admin) {
+                return redirect()->route('calendars.index');
+            }
+
+            // If intended is calendars and user is admin, allow it (admins can view calendars too)
             return redirect($intended);
         }
 

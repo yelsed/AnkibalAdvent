@@ -7,6 +7,29 @@
     import AudioPlayer from '@/components/calendar/AudioPlayer.svelte';
     import { Button } from '@/components/ui/button';
     import { toast } from 'svelte-sonner';
+    import { getCountdownString, getNextDayForCountdown } from '@/lib/countdown';
+
+    function formatCountdownWithLabels(countdown: string, dayNumber: number): string {
+        const parts = countdown.split(':');
+
+        if (parts.length === 4) {
+            // Format: DD:HH:MM:SS -> "DD dagen HH uren MM min SS sec"
+            const [days, hours, minutes, seconds] = parts;
+            const daysNum = parseInt(days, 10);
+            if (daysNum > 0) {
+                return `${days} dagen ${hours} uren ${minutes} min ${seconds} sec`;
+            } else {
+                // If days is 00, format as HH uren MM min SS sec
+                return `${hours} uren ${minutes} min ${seconds} sec`;
+            }
+        } else if (parts.length === 3) {
+            // Format: HH:MM:SS -> "HH uren MM min SS sec"
+            const [hours, minutes, seconds] = parts;
+            return `${hours} uren ${minutes} min ${seconds} sec`;
+        }
+
+        return countdown;
+    }
 
     interface CalendarDay {
         id: number;
@@ -52,6 +75,7 @@
     let selectedDay = $state<CalendarDay | null>(null);
     let modalOpen = $state(false);
     let justUnlocked = $state(false);
+    let currentTime = $state(new Date());
 
     // Debug mode toggle (stored in localStorage)
     const DEBUG_KEY = 'calendar_debug_mode';
@@ -66,9 +90,52 @@
         }
     }
 
-    const currentDay = new Date().getDate();
-    const currentMonth = new Date().getMonth() + 1;
-    const isDecember = currentMonth === 12;
+    // Update current time every second for countdown
+    $effect(() => {
+        const interval = setInterval(() => {
+            currentTime = new Date();
+        }, 1000);
+
+        return () => clearInterval(interval);
+    });
+
+    const currentDay = $derived(currentTime.getDate());
+    const currentMonth = $derived(currentTime.getMonth() + 1);
+    const currentHour = $derived(currentTime.getHours());
+    const isDecember = $derived(currentMonth === 12);
+
+    // Determine which day should show countdown
+    const nextDayForCountdown = $derived(getNextDayForCountdown(calendar.days));
+
+    // Calculate countdown string for the next day
+    // Explicitly depend on currentTime so it updates every second
+    const countdownMap = $derived.by(() => {
+        // Access currentTime to create dependency
+        currentTime;
+
+        const map = new Map<number, string | null>();
+
+        if (nextDayForCountdown === null || debugMode) {
+            return map;
+        }
+
+        const nextDay = calendar.days.find(d => d.day_number === nextDayForCountdown);
+        if (nextDay) {
+            const countdown = getCountdownString(
+                nextDay.day_number,
+                nextDay.unlocked_at !== null,
+                calendar.year,
+                currentTime
+            );
+            // Only show countdown if day cannot be unlocked yet
+            if (countdown !== null && !canUnlockDay(nextDay)) {
+                const formattedCountdown = formatCountdownWithLabels(countdown, nextDay.day_number);
+                map.set(nextDay.day_number, formattedCountdown);
+            }
+        }
+
+        return map;
+    });
 
     function canUnlockDay(day: CalendarDay): boolean {
         if (day.unlocked_at) {
@@ -91,7 +158,19 @@
         }
 
         // Can only unlock if day_number <= current day
-        return day.day_number <= currentDay;
+        if (day.day_number > currentDay) {
+            return false;
+        }
+
+        // Can only unlock if it's 07:00 or later on that day
+        // If it's the current day, check if it's past 07:00
+        if (day.day_number === currentDay) {
+            if (currentHour < 7) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     async function handleDayClick(day: CalendarDay) {
@@ -277,6 +356,7 @@
                 <DayCard
                     {day}
                     canUnlock={canUnlockDay(day)}
+                    countdown={countdownMap.get(day.day_number) || null}
                     onclick={() => handleDayClick(day)}
                 />
             {/each}

@@ -13,7 +13,8 @@
     let { breadcrumbs = [], children }: Props = $props();
 
     const user = $derived($page.props.auth.user);
-    const isAdmin = $derived(user?.is_admin ?? false);
+    // Explicitly check if user is admin - only show sidebar for admins
+    const isAdmin = $derived(user?.is_admin === true);
 </script>
 
 {#if isAdmin}

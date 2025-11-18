@@ -58,8 +58,11 @@ class CalendarDay extends Model
             return true;
         }
 
-        $currentDay = now()->day;
-        $currentMonth = now()->month;
+        $now = now();
+        $currentDay = $now->day;
+        $currentMonth = $now->month;
+        $currentHour = $now->hour;
+        $currentMinute = $now->minute;
 
         // Can only unlock in December
         if ($currentMonth !== 12) {
@@ -67,6 +70,19 @@ class CalendarDay extends Model
         }
 
         // Can only unlock if day_number <= current day
-        return $this->day_number <= $currentDay;
+        if ($this->day_number > $currentDay) {
+            return false;
+        }
+
+        // Can only unlock if it's 07:00 or later on that day
+        // If it's the current day, check if it's past 07:00
+        if ($this->day_number === $currentDay) {
+            // Check if current time is 07:00 or later
+            if ($currentHour < 7) {
+                return false;
+            }
+        }
+
+        return true;
     }
 }

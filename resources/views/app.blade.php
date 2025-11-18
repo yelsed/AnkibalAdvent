@@ -14,21 +14,15 @@
     @vite(['resources/js/app.ts'])
     @inertiaHead
 
-    {{-- Inline script to detect system dark mode preference and apply it immediately --}}
+    {{-- Always force light mode - ignore system preferences --}}
     <script>
         (function() {
-            const appearance = '{{ $appearance ?? "light" }}';
-
-            // Remove dark class first to ensure clean state
+            // Always remove dark class to ensure light mode
             document.documentElement.classList.remove('dark');
 
-            if (appearance === 'system') {
-                const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
-                if (prefersDark) {
-                    document.documentElement.classList.add('dark');
-                }
-            } else if (appearance === 'dark') {
-                document.documentElement.classList.add('dark');
+            // Override any saved appearance setting
+            if (typeof localStorage !== 'undefined') {
+                localStorage.setItem('appearance', 'light');
             }
         })();
     </script>

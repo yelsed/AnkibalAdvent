@@ -17,6 +17,18 @@ test('users can authenticate using the login screen', function () {
     ]);
 
     $this->assertAuthenticated();
+    $response->assertRedirect(route('calendars.index', absolute: false));
+});
+
+test('admin users are redirected to dashboard after login', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $response = $this->post('/login', [
+        'email' => $admin->email,
+        'password' => 'password',
+    ]);
+
+    $this->assertAuthenticated();
     $response->assertRedirect(route('dashboard', absolute: false));
 });
 
@@ -38,4 +50,27 @@ test('users can logout', function () {
 
     $this->assertGuest();
     $response->assertRedirect('/');
+});
+
+test('guests can view the home page', function () {
+    $response = $this->get('/');
+
+    $response->assertStatus(200);
+    $response->assertInertia(fn ($page) => $page->component('Welcome'));
+});
+
+test('authenticated regular users are redirected from home to calendars', function () {
+    $user = User::factory()->create();
+
+    $response = $this->actingAs($user)->get('/');
+
+    $response->assertRedirect(route('calendars.index', absolute: false));
+});
+
+test('authenticated admin users are redirected from home to dashboard', function () {
+    $admin = User::factory()->create(['is_admin' => true]);
+
+    $response = $this->actingAs($admin)->get('/');
+
+    $response->assertRedirect(route('dashboard', absolute: false));
 });

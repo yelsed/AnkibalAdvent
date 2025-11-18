@@ -8,6 +8,15 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 Route::get('/', function () {
+    // Redirect authenticated users to their appropriate page
+    if (auth()->check()) {
+        if (auth()->user()->is_admin) {
+            return redirect()->route('dashboard');
+        }
+
+        return redirect()->route('calendars.index');
+    }
+
     return Inertia::render('Welcome');
 })->name('home');
 
@@ -22,7 +31,7 @@ Route::post('invitations/accept', [InvitationController::class, 'store'])
     ->name('invitations.store');
 
 // Calendar routes
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::resource('calendars', CalendarController::class)->only([
         'index', 'store', 'show', 'destroy',
     ]);
