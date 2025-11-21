@@ -20,6 +20,7 @@ class CalendarDay extends Model
         'content_image_path',
         'product_code',
         'audio_url',
+        'audio_file_id',
         'unlocked_at',
     ];
 
@@ -34,6 +35,20 @@ class CalendarDay extends Model
     public function calendar(): BelongsTo
     {
         return $this->belongsTo(Calendar::class);
+    }
+
+    public function audioFile(): BelongsTo
+    {
+        return $this->belongsTo(AudioFile::class);
+    }
+
+    public function getAudioUrlAttribute(): ?string
+    {
+        if ($this->audio_file_id && $this->audioFile) {
+            return $this->audioFile->url;
+        }
+
+        return $this->attributes['audio_url'] ?? null;
     }
 
     public function isUnlocked(): bool

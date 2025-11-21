@@ -39,6 +39,12 @@ class HandleInertiaRequests extends Middleware
     {
         [$message, $author] = str(Inspiring::quotes()->random())->explode('-');
 
+        // Ensure we're using Dutch locale for translations
+        $locale = app()->getLocale();
+        if ($locale !== 'nl') {
+            app()->setLocale('nl');
+        }
+
         return [
             ...parent::share($request),
             'name' => config('app.name'),
@@ -51,6 +57,13 @@ class HandleInertiaRequests extends Middleware
                 'location' => $request->url(),
             ],
             'sidebarOpen' => ! $request->hasCookie('sidebar_state') || $request->cookie('sidebar_state') === 'true',
+            'translations' => [
+                'common' => trans('common'),
+                'calendar' => trans('calendar'),
+                'auth' => trans('auth'),
+                'dashboard' => trans('dashboard'),
+                'admin' => trans('admin'),
+            ],
         ];
     }
 }

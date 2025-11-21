@@ -28,6 +28,7 @@ class UpdateCalendarDayRequest extends FormRequest
             'content_image' => ['nullable', 'image', 'mimes:jpeg,jpg,png,gif,webp', 'max:5120'],
             'product_code' => ['required_if:gift_type,product', 'nullable', 'string', 'max:255'],
             'audio_url' => ['nullable', 'url', 'max:2048'],
+            'audio_file_id' => ['nullable', 'exists:audio_files,id'],
         ];
     }
 

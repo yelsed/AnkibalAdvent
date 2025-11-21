@@ -1,8 +1,16 @@
 <script lang="ts">
     import { Drawer } from 'vaul-svelte';
+    import { page } from '@inertiajs/svelte';
     import GiftContent from './GiftContent.svelte';
     import ConfettiEffect from './ConfettiEffect.svelte';
     import AudioPlayer from './AudioPlayer.svelte';
+    import { t, initTranslations } from '@/lib/translations';
+
+    // Initialize translations immediately from page props
+    const translations = ($page.props as any)?.translations;
+    if (translations) {
+        initTranslations(translations);
+    }
 
     interface CalendarDay {
         id: number;
@@ -50,7 +58,7 @@
                     <div class="mx-auto max-w-2xl">
                         <div class="mb-6 flex items-center justify-between">
                             <h2 class="text-3xl font-bold text-pink-600">
-                                Day {day.day_number}
+                                {t('calendar.day_number', { number: day.day_number })}
                             </h2>
                             <div class="rounded-full bg-pink-100 px-4 py-2">
                                 <span class="text-sm font-medium text-pink-700">
@@ -61,7 +69,7 @@
 
                         {#if day.audio_url}
                             <div class="mb-6">
-                                <AudioPlayer audioUrl={day.audio_url} />
+                                <AudioPlayer audioUrl={day.audio_url} autoplay={true} />
                             </div>
                         {/if}
 
@@ -76,7 +84,7 @@
                     onclick={() => (open = false)}
                     class="w-full rounded-lg bg-pink-500 px-4 py-3 font-semibold text-white transition-colors hover:bg-pink-600"
                 >
-                    Close
+                    {t('common.close')}
                 </button>
             </div>
         </Drawer.Content>
