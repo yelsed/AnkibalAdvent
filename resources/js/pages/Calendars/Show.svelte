@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { router } from '@inertiajs/svelte';
+    import { router, page } from '@inertiajs/svelte';
     import axios from 'axios';
     import AppLayout from '@/layouts/AppLayout.svelte';
     import DayCard from '@/components/calendar/DayCard.svelte';
@@ -8,6 +8,13 @@
     import { Button } from '@/components/ui/button';
     import { toast } from 'svelte-sonner';
     import { getCountdownString, getNextDayForCountdown } from '@/lib/countdown';
+    import { t, initTranslations } from '@/lib/translations';
+
+    // Initialize translations immediately from page props
+    const translations = ($page.props as any)?.translations;
+    if (translations) {
+        initTranslations(translations);
+    }
 
     function formatCountdownWithLabels(countdown: string, dayNumber: number): string {
         const parts = countdown.split(':');
@@ -17,15 +24,15 @@
             const [days, hours, minutes, seconds] = parts;
             const daysNum = parseInt(days, 10);
             if (daysNum > 0) {
-                return `${days} dagen ${hours} uren ${minutes} min ${seconds} sec`;
+                return `${days} ${t('common.days')} ${hours} ${t('common.hours')} ${minutes} ${t('common.minutes')} ${seconds} ${t('common.seconds')}`;
             } else {
                 // If days is 00, format as HH uren MM min SS sec
-                return `${hours} uren ${minutes} min ${seconds} sec`;
+                return `${hours} ${t('common.hours')} ${minutes} ${t('common.minutes')} ${seconds} ${t('common.seconds')}`;
             }
         } else if (parts.length === 3) {
             // Format: HH:MM:SS -> "HH uren MM min SS sec"
             const [hours, minutes, seconds] = parts;
-            return `${hours} uren ${minutes} min ${seconds} sec`;
+            return `${hours} ${t('common.hours')} ${minutes} ${t('common.minutes')} ${seconds} ${t('common.seconds')}`;
         }
 
         return countdown;
@@ -77,10 +84,13 @@
     let justUnlocked = $state(false);
     let currentTime = $state(new Date());
 
+    // Check if debug mode is enabled from server config
+    const calendarDebugEnabled = $derived(($page.props as any)?.calendarDebugEnabled ?? false);
+
     // Debug mode toggle (stored in localStorage)
     const DEBUG_KEY = 'calendar_debug_mode';
     let debugMode = $state(
-        typeof localStorage !== 'undefined' ? localStorage.getItem(DEBUG_KEY) === 'true' : false
+        calendarDebugEnabled && typeof localStorage !== 'undefined' ? localStorage.getItem(DEBUG_KEY) === 'true' : false
     );
 
     function toggleDebugMode() {
@@ -147,8 +157,8 @@
             return true;
         }
 
-        // Debug mode: allow all days to be unlocked
-        if (debugMode) {
+        // Debug mode: allow all days to be unlocked (only if enabled in config)
+        if (calendarDebugEnabled && debugMode) {
             return true;
         }
 
@@ -184,17 +194,19 @@
 
         // Frontend check - backend will also validate
         if (!canUnlockDay(day)) {
-            toast.error('This day cannot be unlocked yet!', {
+            toast.error(t('calendar.this_day_cannot_unlocked_yet'), {
                 description: isDecember
-                    ? `Come back on December ${day.day_number}`
-                    : 'Advent calendars can only be opened in December',
+                    ? t('calendar.come_back_december', { day: day.day_number })
+                    : t('calendar.advent_calendars_only_december'),
             });
             return;
         }
 
         // Unlock the day
         try {
-            const response = await axios.post(`/calendar-days/${day.id}/unlock`);
+            const response = await axios.post(`/calendar-days/${day.id}/unlock`, {
+                debug_mode: debugMode
+            });
 
             // Update the day with the unlocked data - replace entire array to trigger reactivity
             const dayIndex = calendar.days.findIndex(d => d.id === day.id);
@@ -209,12 +221,12 @@
                 modalOpen = true;
             }
 
-            toast.success('Day unlocked! 🎉', {
+            toast.success(t('calendar.day_unlocked'), {
                 description: response.data.message,
             });
         } catch (error: any) {
-            toast.error('Failed to unlock day', {
-                description: error.response?.data?.message || 'An error occurred',
+            toast.error(t('calendar.failed_unlock_day'), {
+                description: error.response?.data?.message || t('common.error'),
             });
         }
     }
@@ -222,15 +234,15 @@
     function goToAdmin() {
         router.visit(`/admin/calendars/${calendar.id}/manage`);
     }
+
+    const breadcrumbs = $derived([
+        { title: t('common.home'), href: '/' },
+        { title: t('common.calendars'), href: '/calendars' },
+        { title: calendar.title, href: `/calendars/${calendar.id}` }
+    ]);
 </script>
 
-<AppLayout
-    breadcrumbs={[
-        { title: 'Home', href: '/' },
-        { title: 'Calendars', href: '/calendars' },
-        { title: calendar.title, href: `/calendars/${calendar.id}` }
-    ]}
->
+<AppLayout {breadcrumbs}>
     <div class="mx-auto max-w-7xl space-y-8 p-4 sm:p-6">
         <!-- Admin Banner -->
         {#if isAdmin && !isOwner}
@@ -240,12 +252,12 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                     <div class="flex-1">
-                        <p class="font-semibold text-blue-900">Admin View</p>
+                        <p class="font-semibold text-blue-900">{t('calendar.admin_view')}</p>
                         <p class="text-sm text-blue-700">
                             {#if calendar.user}
-                                Viewing calendar owned by <strong>{calendar.user.name}</strong> ({calendar.user.email})
+                                {t('calendar.viewing_calendar_owned_by', { name: calendar.user.name, email: calendar.user.email })}
                             {:else}
-                                Viewing calendar
+                                {t('calendar.viewing_calendar')}
                             {/if}
                         </p>
                     </div>
@@ -255,7 +267,7 @@
                         onclick={() => router.visit('/admin/calendars')}
                         class="border-blue-300 text-blue-700 hover:bg-blue-100"
                     >
-                        Back to Admin
+                        {t('calendar.back_to_admin')}
                     </Button>
                 </div>
             </div>
@@ -268,7 +280,7 @@
                     <h1 class="text-3xl font-bold text-pink-700 sm:text-4xl">{calendar.title}</h1>
                     {#if isAdmin}
                         <span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
-                            ADMIN
+                            {t('common.admin')}
                         </span>
                     {/if}
                 </div>
@@ -276,22 +288,23 @@
                     <p class="mt-2 text-gray-600">{calendar.description}</p>
                 {/if}
                 <div class="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
-                    <span>Year: {calendar.year}</span>
+                    <span>{t('common.year')}: {calendar.year}</span>
                     {#if isAdmin && calendar.user}
-                        <span>• Owner: {calendar.user.name}</span>
+                        <span>• {t('calendar.creator')}: {calendar.user.name}</span>
                     {/if}
                 </div>
             </div>
 
             <div class="flex gap-2">
-                <!-- Debug Mode Toggle -->
+                <!-- Debug Mode Toggle (only shown if enabled in config) -->
+                {#if calendarDebugEnabled}
                 <Button
                     onclick={toggleDebugMode}
                     variant={debugMode ? 'default' : 'outline'}
                     class={debugMode
                         ? 'bg-yellow-500 text-white hover:bg-yellow-600'
                         : 'border-yellow-300 text-yellow-600 hover:bg-yellow-50'}
-                    title="Toggle debug mode to unlock all days"
+                    title={t('calendar.toggle_debug_mode')}
                 >
                     <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path
@@ -301,8 +314,9 @@
                             d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"
                         />
                     </svg>
-                    Debug {debugMode ? 'ON' : 'OFF'}
-                </Button>
+                        {t('calendar.debug_mode')} {debugMode ? t('calendar.debug_on') : t('calendar.debug_off')}
+                    </Button>
+                {/if}
 
                 {#if canManage}
                     <Button onclick={goToAdmin} variant="outline" class="border-pink-200 text-pink-600 hover:bg-pink-50">
@@ -315,29 +329,29 @@
                             />
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                         </svg>
-                        Manage Days
+                        {t('calendar.manage_days')}
                     </Button>
                 {/if}
             </div>
         </div>
 
         <!-- Info Banner -->
-        {#if debugMode}
+        {#if calendarDebugEnabled && debugMode}
             <div class="rounded-lg bg-yellow-100 border-2 border-yellow-400 p-4 text-center">
                 <p class="text-yellow-800 font-semibold">
-                    🐛 Debug Mode: All days can be unlocked regardless of date!
+                    {t('calendar.debug_mode_all_days')}
                 </p>
             </div>
         {:else if !isDecember}
             <div class="rounded-lg bg-pink-50 p-4 text-center">
                 <p class="text-pink-700">
-                    <span class="font-semibold">Note:</span> Days can only be unlocked in December!
+                    <span class="font-semibold">{t('calendar.note')}:</span> {t('calendar.days_only_unlock_december')}
                 </p>
             </div>
         {:else}
             <div class="rounded-lg bg-pink-50 p-4 text-center">
                 <p class="text-pink-700">
-                    You can unlock days 1-{currentDay} now! 🎅
+                    {t('calendar.can_unlock_days', { day: currentDay })}
                 </p>
             </div>
         {/if}
@@ -345,7 +359,7 @@
         <!-- Calendar Audio -->
         {#if calendar.audio_url}
             <div class="rounded-lg border border-pink-200 bg-pink-50 p-4">
-                <h3 class="mb-3 text-lg font-semibold text-pink-700">Calendar Music</h3>
+                <h3 class="mb-3 text-lg font-semibold text-pink-700">{t('calendar.calendar_music')}</h3>
                 <AudioPlayer audioUrl={calendar.audio_url} loop={true} />
             </div>
         {/if}
@@ -368,50 +382,50 @@
                 <p class="text-3xl font-bold text-pink-600">
                     {calendar.days.filter(d => d.unlocked_at).length}
                 </p>
-                <p class="text-sm text-gray-600">Days Unlocked</p>
+                <p class="text-sm text-gray-600">{t('calendar.days_unlocked')}</p>
             </div>
             <div class="text-center">
                 <p class="text-3xl font-bold text-pink-600">
                     {calendar.days.length - calendar.days.filter(d => d.unlocked_at).length}
                 </p>
-                <p class="text-sm text-gray-600">Days Remaining</p>
+                <p class="text-sm text-gray-600">{t('calendar.days_remaining')}</p>
             </div>
             <div class="col-span-2 text-center sm:col-span-1">
                 <p class="text-3xl font-bold text-pink-600">
                     {Math.round((calendar.days.filter(d => d.unlocked_at).length / calendar.days.length) * 100)}%
                 </p>
-                <p class="text-sm text-gray-600">Complete</p>
+                <p class="text-sm text-gray-600">{t('calendar.complete')}</p>
             </div>
         </div>
 
         <!-- Admin Stats -->
         {#if isAdmin}
             <div class="rounded-lg border-2 border-blue-200 bg-blue-50 p-6">
-                <h3 class="mb-4 text-lg font-semibold text-blue-900">Admin Statistics</h3>
+                <h3 class="mb-4 text-lg font-semibold text-blue-900">{t('calendar.admin_statistics')}</h3>
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
                     <div class="text-center">
                         <p class="text-2xl font-bold text-blue-700">
-                            {calendar.days.filter(d => d.content_text && d.content_text !== 'This gift hasn\'t been set up yet.').length}
+                            {calendar.days.filter(d => d.content_text && d.content_text !== t('calendar.gift_hasnt_setup')).length}
                         </p>
-                        <p class="text-xs text-blue-600">Days with Content</p>
+                        <p class="text-xs text-blue-600">{t('calendar.days_with_content')}</p>
                     </div>
                     <div class="text-center">
                         <p class="text-2xl font-bold text-blue-700">
                             {calendar.days.filter(d => d.gift_type === 'image_text').length}
                         </p>
-                        <p class="text-xs text-blue-600">Image Days</p>
+                        <p class="text-xs text-blue-600">{t('calendar.image_days')}</p>
                     </div>
                     <div class="text-center">
                         <p class="text-2xl font-bold text-blue-700">
                             {calendar.days.filter(d => d.gift_type === 'product').length}
                         </p>
-                        <p class="text-xs text-blue-600">Product Days</p>
+                        <p class="text-xs text-blue-600">{t('calendar.product_days')}</p>
                     </div>
                     <div class="text-center">
                         <p class="text-2xl font-bold text-blue-700">
-                            {calendar.days.filter(d => !d.content_text || d.content_text === 'This gift hasn\'t been set up yet.').length}
+                            {calendar.days.filter(d => !d.content_text || d.content_text === t('calendar.gift_hasnt_setup')).length}
                         </p>
-                        <p class="text-xs text-blue-600">Days to Setup</p>
+                        <p class="text-xs text-blue-600">{t('calendar.days_to_setup')}</p>
                     </div>
                 </div>
             </div>

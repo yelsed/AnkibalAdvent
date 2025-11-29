@@ -103,10 +103,19 @@ class AdminController extends Controller
 
         $calendar->load(['days' => function ($query) {
             $query->orderBy('day_number');
-        }]);
+        }, 'days.audioFile']);
+
+        $audioFiles = \App\Models\AudioFile::orderBy('name')->get()->map(function ($file) {
+            return [
+                'id' => $file->id,
+                'name' => $file->name,
+                'url' => $file->url,
+            ];
+        });
 
         return Inertia::render('Admin/CalendarDays', [
             'calendar' => $calendar,
+            'audioFiles' => $audioFiles,
         ]);
     }
 }

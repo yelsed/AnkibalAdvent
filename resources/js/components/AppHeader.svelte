@@ -15,6 +15,7 @@
     import { Link, page } from '@inertiajs/svelte';
     import { cva } from 'class-variance-authority';
     import { BookOpen, Folder, LayoutGrid, Menu, Search } from 'lucide-svelte';
+    import { t, initTranslations } from '@/lib/translations';
 
     interface NavItem {
         title: string;
@@ -28,6 +29,13 @@
 
     let { breadcrumbs = [] }: Props = $props();
 
+    $effect(() => {
+        const translations = ($page.props as any)?.translations;
+        if (translations) {
+            initTranslations(translations);
+        }
+    });
+
     let user = $derived($page.props.auth.user);
 
     const isCurrentRoute = $derived((url: string) => $page.url === url);
@@ -38,26 +46,26 @@
         `group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-active:bg-accent/50 data-[state=open]:bg-accent/50`,
     );
 
-    const mainNavItems: NavItem[] = [
+    const mainNavItems: NavItem[] = $derived([
         {
-            title: 'Dashboard',
+            title: t('common.dashboard'),
             href: '/dashboard',
             icon: LayoutGrid,
         },
-    ];
+    ]);
 
-    const rightNavItems: NavItem[] = [
+    const rightNavItems: NavItem[] = $derived([
         {
-            title: 'Repository',
+            title: t('common.repository'),
             href: 'https://github.com/oseughu/svelte-starter-kit',
             icon: Folder,
         },
         {
-            title: 'Documentation',
+            title: t('common.documentation'),
             href: 'https://laravel.com/docs/starter-kits',
             icon: BookOpen,
         },
-    ];
+    ]);
 </script>
 
 <div>

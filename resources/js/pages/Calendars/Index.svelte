@@ -7,6 +7,13 @@
     import { Label } from '@/components/ui/label';
     import { Textarea } from '@/components/ui/textarea';
     import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+    import { t, initTranslations } from '@/lib/translations';
+
+    // Initialize translations immediately from page props
+    const translations = ($page.props as any)?.translations;
+    if (translations) {
+        initTranslations(translations);
+    }
 
     interface Calendar {
         id: number;
@@ -35,21 +42,21 @@
             formKey++;
         }
     });
+
+    const breadcrumbs = $derived([
+        { title: t('common.home'), href: '/' },
+        { title: t('common.calendars'), href: '/calendars' }
+    ]);
 </script>
 
-<AppLayout
-    breadcrumbs={[
-        { title: 'Home', href: '/' },
-        { title: 'Calendars', href: '/calendars' }
-    ]}
->
+<AppLayout {breadcrumbs}>
     <div class="mx-auto max-w-7xl space-y-8 p-6">
         <!-- Header -->
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-4xl font-bold text-pink-700">🎄 My Advent Calendars</h1>
+                <h1 class="text-4xl font-bold text-pink-700">🎄 {t('calendar.my_advent_calendars')}</h1>
                 <p class="mt-2 text-gray-600">
-                    {isAdmin ? 'Create and manage your festive advent calendars' : 'View your advent calendars'}
+                    {isAdmin ? t('calendar.create_and_manage') : t('calendar.view_calendars')}
                 </p>
             </div>
 
@@ -60,15 +67,15 @@
                         <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
                         </svg>
-                        Create New Calendar
+                        {t('calendar.create_new_calendar')}
                     </Button>
                 </DialogTrigger>
                 <DialogContent>
                     {#snippet children()}
                         <DialogHeader>
-                            <DialogTitle>Create New Advent Calendar</DialogTitle>
+                            <DialogTitle>{t('calendar.create_new_calendar')}</DialogTitle>
                             <DialogDescription>
-                                Fill in the details to create a new advent calendar with 31 days.
+                                {t('calendar.calendar_details')}
                             </DialogDescription>
                         </DialogHeader>
                         {#key formKey}
@@ -83,12 +90,12 @@
                             {#snippet children({ errors, processing }: { errors: Record<string, string>; processing: boolean })}
                                 <div class="space-y-4">
                                     <div>
-                                        <Label for="title">Title</Label>
+                                        <Label for="title">{t('common.title')}</Label>
                                         <Input
                                             id="title"
                                             name="title"
                                             defaultValue=""
-                                            placeholder="My Advent Calendar 2025"
+                                            placeholder={t('calendar.calendar_title_placeholder')}
                                             required
                                         />
                                         {#if errors.title}
@@ -97,7 +104,7 @@
                                     </div>
 
                                     <div>
-                                        <Label for="year">Year</Label>
+                                        <Label for="year">{t('common.year')}</Label>
                                         <Input
                                             id="year"
                                             name="year"
@@ -112,12 +119,12 @@
                                     </div>
 
                                     <div>
-                                        <Label for="description">Description (optional)</Label>
+                                        <Label for="description">{t('calendar.description_optional')}</Label>
                                         <Textarea
                                             id="description"
                                             name="description"
                                             defaultValue=""
-                                            placeholder="A special advent calendar for..."
+                                            placeholder={t('calendar.description_placeholder')}
                                             rows={3}
                                         />
                                         {#if errors.description}
@@ -126,7 +133,7 @@
                                     </div>
 
                                     <div>
-                                        <Label for="theme_color">Theme Color</Label>
+                                        <Label for="theme_color">{t('calendar.theme_color')}</Label>
                                         <Input
                                             id="theme_color"
                                             name="theme_color"
@@ -144,14 +151,14 @@
                                             variant="outline"
                                             onclick={() => (showCreateDialog = false)}
                                         >
-                                            Cancel
+                                            {t('common.cancel')}
                                         </Button>
                                         <Button
                                             type="submit"
                                             disabled={processing}
                                             class="bg-pink-500 hover:bg-pink-600"
                                         >
-                                            {processing ? 'Creating...' : 'Create Calendar'}
+                                            {processing ? t('common.creating') : t('calendar.create_calendar')}
                                         </Button>
                                     </div>
                                 </div>
@@ -181,35 +188,37 @@
                             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                     </svg>
-                    <h3 class="mb-2 text-xl font-semibold text-gray-700">No calendars yet</h3>
-                    <p class="mb-4 text-gray-500">Create your first advent calendar to get started!</p>
+                    <h3 class="mb-2 text-xl font-semibold text-gray-700">{t('calendar.no_calendars_yet')}</h3>
+                    <p class="mb-4 text-gray-500">{t('calendar.create_first_calendar')}</p>
                 </CardContent>
             </Card>
         {:else}
             <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
                 {#each calendars as calendar}
                     <Card
-                        class="group cursor-pointer transition-all hover:scale-105 hover:shadow-lg"
+                        tiltEnabled={true}
+                        style="border-color: {calendar.theme_color}"
+                        class="group transition-all hover:shadow-lg"
                         onclick={() => router.visit(`/calendars/${calendar.id}`)}
                     >
                         <CardHeader style="background: linear-gradient(135deg, {calendar.theme_color}20, {calendar.theme_color}10);">
                             <CardTitle class="text-2xl">{calendar.title}</CardTitle>
                             <CardDescription class="text-base">
-                                {calendar.year} • Created {new Date(calendar.created_at).toLocaleDateString()}
+                                {calendar.year} • {t('calendar.created')} {new Date(calendar.created_at).toLocaleDateString()}
                             </CardDescription>
                         </CardHeader>
                         <CardContent class="pt-6">
                             {#if calendar.description}
                                 <p class="text-sm text-gray-600">{calendar.description}</p>
                             {:else}
-                                <p class="text-sm italic text-gray-400">No description</p>
+                                <p class="text-sm italic text-gray-400">{t('calendar.no_description')}</p>
                             {/if}
                             <div class="mt-4 flex items-center gap-2">
                                 <div
                                     class="h-6 w-6 rounded-full border-2 border-gray-200"
                                     style="background-color: {calendar.theme_color}"
                                 ></div>
-                                <span class="text-sm text-gray-500">31 days</span>
+                                <span class="text-sm text-gray-500">31 {t('calendar.days')}</span>
                             </div>
                         </CardContent>
                     </Card>

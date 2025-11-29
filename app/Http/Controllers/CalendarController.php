@@ -41,13 +41,13 @@ class CalendarController extends Controller
             $calendar->days()->create([
                 'day_number' => $day,
                 'gift_type' => 'text',
-                'title' => "Day {$day}",
-                'content_text' => 'This gift hasn\'t been set up yet.',
+                'title' => __('calendar.day_number', ['number' => $day]),
+                'content_text' => __('calendar.gift_hasnt_setup'),
             ]);
         }
 
         return redirect()->route('calendars.show', $calendar)
-            ->with('success', 'Calendar created successfully!');
+            ->with('success', __('calendar.calendar_created_successfully'));
     }
 
     /**
@@ -59,7 +59,7 @@ class CalendarController extends Controller
 
         $calendar->load(['days' => function ($query) {
             $query->orderBy('day_number');
-        }, 'user']);
+        }, 'days.audioFile', 'user']);
 
         $isAdmin = auth()->user()->is_admin;
         $isOwner = auth()->user()->id === $calendar->user_id;
@@ -82,6 +82,6 @@ class CalendarController extends Controller
         $calendar->delete();
 
         return redirect()->route('calendars.index')
-            ->with('success', 'Calendar deleted successfully.');
+            ->with('success', __('calendar.calendar_deleted_successfully'));
     }
 }

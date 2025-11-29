@@ -8,6 +8,14 @@
     import { Textarea } from '@/components/ui/textarea';
     import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
     import { toast } from 'svelte-sonner';
+    import { page } from '@inertiajs/svelte';
+    import { t, initTranslations } from '@/lib/translations';
+
+    // Initialize translations immediately from page props
+    const translations = ($page.props as any)?.translations;
+    if (translations) {
+        initTranslations(translations);
+    }
 
     interface User {
         id: number;
@@ -44,14 +52,15 @@
             inviteNewUser = false;
         }
     });
+
+    // Breadcrumbs - must be defined after translations are initialized
+    const breadcrumbs = $derived([
+        { title: t('common.home'), href: '/' },
+        { title: t('common.admin'), href: '/admin/calendars' }
+    ]);
 </script>
 
-<AppLayout
-    breadcrumbs={[
-        { title: 'Home', href: '/' },
-        { title: 'Admin', href: '/admin/calendars' }
-    ]}
->
+<AppLayout {breadcrumbs}>
     <div class="mx-auto max-w-7xl space-y-8 p-6">
         <!-- Header -->
         <div class="flex items-center justify-between">

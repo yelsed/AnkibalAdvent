@@ -24,21 +24,28 @@ class CalendarDayController extends Controller
 
         if ($calendarDay->isUnlocked()) {
             return response()->json([
-                'message' => 'This day has already been unlocked.',
+                'message' => __('calendar.this_day_already_unlocked'),
                 'day' => $calendarDay,
             ]);
         }
 
-        if (! $calendarDay->canBeUnlocked(Auth::user())) {
+        // Check if debug mode is enabled (from request or config)
+        // Only accept debug_mode from request if calendar_debug_enabled is true
+        $debugMode = false;
+        if (config('app.calendar_debug_enabled')) {
+            $debugMode = request()->boolean('debug_mode') || config('app.calendar_debug_mode');
+        }
+
+        if (! $calendarDay->canBeUnlocked(Auth::user(), $debugMode)) {
             return response()->json([
-                'message' => 'This day cannot be unlocked yet.',
+                'message' => __('calendar.this_day_cannot_unlocked_yet'),
             ], 403);
         }
 
         $calendarDay->update(['unlocked_at' => now()]);
 
         return response()->json([
-            'message' => 'Day unlocked successfully!',
+            'message' => __('calendar.day_unlocked_successfully'),
             'day' => $calendarDay->fresh(),
         ]);
     }
@@ -85,6 +92,13 @@ class CalendarDayController extends Controller
         // Remove content_image from data array as it's not a database field
         unset($data['content_image']);
 
+        // Handle audio_file_id: if set, clear audio_url; if audio_url is set, clear audio_file_id
+        if (isset($data['audio_file_id']) && $data['audio_file_id']) {
+            $data['audio_url'] = null;
+        } elseif (isset($data['audio_url']) && $data['audio_url']) {
+            $data['audio_file_id'] = null;
+        }
+
         // Always update, even if only image was uploaded
         $calendarDay->update($data);
 
@@ -92,6 +106,6 @@ class CalendarDayController extends Controller
         $calendarDay->refresh();
 
         return redirect()->route('admin.calendars.manage', $calendarDay->calendar)
-            ->with('success', 'Day updated successfully!');
+            ->with('success', __('calendar.day_updated_successfully'));
     }
 }

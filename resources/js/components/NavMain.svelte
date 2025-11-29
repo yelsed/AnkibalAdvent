@@ -2,16 +2,24 @@
     import { SidebarGroup, SidebarGroupLabel, SidebarMenu, SidebarMenuButton, SidebarMenuItem } from '@/components/ui/sidebar';
     import type { NavItem } from '@/types';
     import { Link, page } from '@inertiajs/svelte';
+    import { t, initTranslations } from '@/lib/translations';
 
     interface Props {
         items: NavItem[];
     }
 
     let { items = [] }: Props = $props();
+
+    $effect(() => {
+        const translations = ($page.props as any)?.translations;
+        if (translations) {
+            initTranslations(translations);
+        }
+    });
 </script>
 
 <SidebarGroup class="px-2 py-0">
-    <SidebarGroupLabel>Platform</SidebarGroupLabel>
+    <SidebarGroupLabel>{t('common.platform')}</SidebarGroupLabel>
     <SidebarMenu>
         {#each items as item (item.title)}
             <SidebarMenuItem>

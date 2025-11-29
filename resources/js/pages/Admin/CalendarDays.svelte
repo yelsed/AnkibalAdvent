@@ -1,5 +1,5 @@
 <script lang="ts">
-    import { router } from '@inertiajs/svelte';
+    import { router, page } from '@inertiajs/svelte';
     import AppLayout from '@/layouts/AppLayout.svelte';
     import { Button } from '@/components/ui/button';
     import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,6 +7,15 @@
     import { Label } from '@/components/ui/label';
     import { Textarea } from '@/components/ui/textarea';
     import { Form } from '@inertiajs/svelte';
+    import { t, initTranslations } from '@/lib/translations';
+
+    // Initialize translations from page props
+    $effect(() => {
+        const translations = ($page.props as any)?.translations;
+        if (translations) {
+            initTranslations(translations);
+        }
+    });
 
     interface CalendarDay {
         id: number;
@@ -17,6 +26,7 @@
         content_image_path: string | null;
         product_code: string | null;
         audio_url: string | null;
+        audio_file_id: number | null;
         unlocked_at: string | null;
     }
 
@@ -29,16 +39,26 @@
         days: CalendarDay[];
     }
 
-    interface Props {
-        calendar: Calendar;
+    interface AudioFile {
+        id: number;
+        name: string;
+        url: string;
     }
 
-    let { calendar }: Props = $props();
+    interface Props {
+        calendar: Calendar;
+        audioFiles: AudioFile[];
+    }
+
+    let { calendar, audioFiles = [] }: Props = $props();
 
     let selectedDayIndex = $state(0);
     let selectedDay = $derived(calendar?.days?.[selectedDayIndex]);
     let currentGiftType = $state<string>('text');
     let giftTypeHiddenInput: HTMLInputElement;
+    let audioSourceType = $state<'none' | 'library' | 'url'>('none');
+    let selectedAudioFileId = $state<number | null>(null);
+    let audioUrlInput = $state('');
 
     // Ensure selectedDayIndex is valid and update currentGiftType when day changes
     $effect(() => {
@@ -59,29 +79,53 @@
             giftTypeHiddenInput.value = currentGiftType;
         }
     });
+
+    // Update audio source type when selected day changes
+    let previousDayId = $state<number | null>(null);
+    $effect(() => {
+        // Only update when the day actually changes (by ID)
+        if (selectedDay && selectedDay.id !== previousDayId) {
+            if (selectedDay.audio_file_id) {
+                audioSourceType = 'library';
+                selectedAudioFileId = selectedDay.audio_file_id;
+                audioUrlInput = '';
+            } else if (selectedDay.audio_url) {
+                audioSourceType = 'url';
+                audioUrlInput = selectedDay.audio_url;
+                selectedAudioFileId = null;
+            } else {
+                audioSourceType = 'none';
+                selectedAudioFileId = null;
+                audioUrlInput = '';
+            }
+            previousDayId = selectedDay.id;
+        } else if (!selectedDay) {
+            previousDayId = null;
+        }
+    });
+
+    const breadcrumbs = $derived([
+        { title: t('common.home'), href: '/' },
+        { title: t('common.calendars'), href: '/calendars' },
+        { title: calendar.title, href: `/calendars/${calendar.id}` },
+        { title: t('common.manage'), href: `/admin/calendars/${calendar.id}/manage` }
+    ]);
 </script>
 
 {#if calendar}
-<AppLayout
-    breadcrumbs={[
-        { title: 'Home', href: '/' },
-        { title: 'Calendars', href: '/calendars' },
-        { title: calendar.title, href: `/calendars/${calendar.id}` },
-        { title: 'Manage', href: `/admin/calendars/${calendar.id}/manage` }
-    ]}
->
+<AppLayout {breadcrumbs}>
     <div class="mx-auto max-w-7xl space-y-6 p-4 sm:p-6">
         <!-- Header -->
         <div class="flex items-center justify-between">
             <div>
-                <h1 class="text-3xl font-bold text-pink-700 sm:text-4xl">Manage Calendar Days</h1>
+                <h1 class="text-3xl font-bold text-pink-700 sm:text-4xl">{t('calendar.manage_calendar_days')}</h1>
                 <p class="mt-2 text-gray-600">{calendar.title} - {calendar.year}</p>
             </div>
             <Button
                 variant="outline"
                 onclick={() => router.visit(`/calendars/${calendar.id}`)}
             >
-                ← Back to Calendar
+                {t('calendar.back_to_calendar')}
             </Button>
         </div>
 
@@ -89,7 +133,7 @@
             <!-- Day Selector -->
             <Card class="lg:col-span-1">
                 <CardHeader>
-                    <CardTitle>Select Day</CardTitle>
+                    <CardTitle>{t('calendar.select_day')}</CardTitle>
                 </CardHeader>
                 <CardContent>
                     <div class="grid grid-cols-4 gap-2 sm:grid-cols-5 lg:grid-cols-3">
@@ -127,9 +171,9 @@
                 <CardHeader>
                     <CardTitle>
                         {#if selectedDay}
-                            Edit Day {selectedDay.day_number}
+                            {t('calendar.edit_day', { day: selectedDay.day_number })}
                         {:else}
-                            Select a Day
+                            {t('calendar.select_day')}
                         {/if}
                     </CardTitle>
                 </CardHeader>
@@ -149,16 +193,16 @@
 
                                     <!-- Gift Type -->
                                     <div>
-                                        <Label for="gift_type">Gift Type *</Label>
+                                        <Label for="gift_type">{t('calendar.gift_type_required')}</Label>
                                         <select
                                             id="gift_type"
                                             bind:value={currentGiftType}
                                             required
                                             class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
                                         >
-                                            <option value="text">Text Only</option>
-                                            <option value="image_text">Image + Text</option>
-                                            <option value="product">Product/Coupon</option>
+                                            <option value="text">{t('calendar.text_only')}</option>
+                                            <option value="image_text">{t('calendar.image_text')}</option>
+                                            <option value="product">{t('calendar.product')}</option>
                                         </select>
                                         {#if errors.gift_type}
                                             <p class="mt-1 text-sm text-red-600">{errors.gift_type}</p>
@@ -167,12 +211,12 @@
 
                                     <!-- Title -->
                                     <div>
-                                        <Label for="title">Title (optional)</Label>
+                                        <Label for="title">{t('calendar.title_optional')}</Label>
                                         <Input
                                             id="title"
                                             name="title"
                                             defaultValue={selectedDay.title || ''}
-                                            placeholder="A special surprise..."
+                                            placeholder={t('calendar.title_placeholder')}
                                         />
                                         {#if errors.title}
                                             <p class="mt-1 text-sm text-red-600">{errors.title}</p>
@@ -182,12 +226,12 @@
                                     <!-- Content Text (for text and image_text types) -->
                                     {#if currentGiftType === 'text' || currentGiftType === 'image_text'}
                                         <div>
-                                            <Label for="content_text">Content Text</Label>
+                                            <Label for="content_text">{t('calendar.content_text')}</Label>
                                             <Textarea
                                                 id="content_text"
                                                 name="content_text"
                                                 defaultValue={selectedDay.content_text || ''}
-                                                placeholder="Your message here..."
+                                                placeholder={t('calendar.content_text_placeholder')}
                                                 rows={6}
                                             />
                                             {#if errors.content_text}
@@ -199,17 +243,17 @@
                                     <!-- Image Upload (only for image_text type) -->
                                     {#if currentGiftType === 'image_text'}
                                         <div>
-                                            <Label for="content_image">Image *</Label>
+                                            <Label for="content_image">{t('calendar.content_image_required')}</Label>
                                             {#if selectedDay.content_image_path}
                                                 <div class="mb-2 rounded-lg border-2 border-green-200 bg-green-50 p-3">
-                                                    <p class="mb-2 text-sm font-medium text-green-700">✓ Current image:</p>
+                                                    <p class="mb-2 text-sm font-medium text-green-700">✓ {t('calendar.current_image')}</p>
                                                     <img
                                                         src={`/storage/${selectedDay.content_image_path}`}
-                                                        alt="Current"
+                                                        alt={t('common.current')}
                                                         class="h-32 w-auto rounded-lg object-cover"
                                                         style="image-rendering: auto;"
                                                     />
-                                                    <p class="mt-2 text-xs text-gray-600">Upload a new image to replace this one</p>
+                                                    <p class="mt-2 text-xs text-gray-600">{t('calendar.upload_new_image')}</p>
                                                 </div>
                                             {/if}
                                             <Input
@@ -227,19 +271,19 @@
                                     <!-- Product Code (only for product type) -->
                                     {#if currentGiftType === 'product'}
                                         <div>
-                                            <Label for="product_code">Product/Coupon Code *</Label>
+                                            <Label for="product_code">{t('calendar.product_code_required')}</Label>
                                             <Input
                                                 id="product_code"
                                                 name="product_code"
                                                 defaultValue={selectedDay.product_code || ''}
-                                                placeholder="ABC123XYZ"
+                                                placeholder={t('calendar.product_code_placeholder')}
                                             />
                                             {#if errors.product_code}
                                                 <p class="mt-1 text-sm text-red-600">{errors.product_code}</p>
                                             {/if}
                                         </div>
                                         <div>
-                                            <Label for="content_image">Product Image (optional)</Label>
+                                            <Label for="content_image">{t('calendar.product_image_optional')}</Label>
                                             <Input
                                                 id="content_image"
                                                 name="content_image"
@@ -251,10 +295,10 @@
                                             {/if}
                                             {#if selectedDay.content_image_path}
                                                 <div class="mt-2">
-                                                    <p class="mb-2 text-sm text-gray-600">Current image:</p>
+                                                    <p class="mb-2 text-sm text-gray-600">{t('calendar.current_image')}</p>
                                                     <img
                                                         src={`/storage/${selectedDay.content_image_path}`}
-                                                        alt="Current"
+                                                        alt={t('common.current')}
                                                         class="h-32 w-auto rounded-lg object-cover"
                                                         style="image-rendering: auto;"
                                                     />
@@ -262,12 +306,12 @@
                                             {/if}
                                         </div>
                                         <div>
-                                            <Label for="content_text">Description (optional)</Label>
+                                            <Label for="content_text">{t('calendar.product_description_optional')}</Label>
                                             <Textarea
                                                 id="content_text"
                                                 name="content_text"
                                                 defaultValue={selectedDay.content_text || ''}
-                                                placeholder="Product description or instructions..."
+                                                placeholder={t('calendar.product_description_placeholder')}
                                                 rows={4}
                                             />
                                             {#if errors.content_text}
@@ -276,38 +320,123 @@
                                         </div>
                                     {/if}
 
-                                    <!-- Audio URL (optional for all types) -->
+                                    <!-- Audio (optional for all types) -->
                                     <div>
-                                        <Label for="audio_url">Audio URL (optional)</Label>
-                                        <Input
-                                            id="audio_url"
-                                            name="audio_url"
-                                            type="url"
-                                            defaultValue={selectedDay.audio_url || ''}
-                                            placeholder="https://example.com/audio.mp3"
-                                        />
-                                        <p class="mt-1 text-xs text-gray-500">Enter a URL to an audio file (MP3, WAV, etc.)</p>
-                                        {#if errors.audio_url}
-                                            <p class="mt-1 text-sm text-red-600">{errors.audio_url}</p>
-                                        {/if}
+                                        <Label>{t('calendar.audio_optional')}</Label>
+                                        <div class="space-y-3">
+                                            <!-- Audio Source Type Selection -->
+                                            <div class="flex gap-2">
+                                                <button
+                                                    type="button"
+                                                    onclick={() => {
+                                                        audioSourceType = 'none';
+                                                        selectedAudioFileId = null;
+                                                        audioUrlInput = '';
+                                                    }}
+                                                    class="rounded-md border px-3 py-2 text-sm transition-colors"
+                                                    class:border-pink-500={audioSourceType === 'none'}
+                                                    class:bg-pink-50={audioSourceType === 'none'}
+                                                    class:border-gray-300={audioSourceType !== 'none'}
+                                                >
+                                                    {t('common.none')}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onclick={() => {
+                                                        audioSourceType = 'library';
+                                                        audioUrlInput = '';
+                                                    }}
+                                                    class="rounded-md border px-3 py-2 text-sm transition-colors"
+                                                    class:border-pink-500={audioSourceType === 'library'}
+                                                    class:bg-pink-50={audioSourceType === 'library'}
+                                                    class:border-gray-300={audioSourceType !== 'library'}
+                                                >
+                                                    {t('calendar.from_library')}
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onclick={() => {
+                                                        audioSourceType = 'url';
+                                                        selectedAudioFileId = null;
+                                                    }}
+                                                    class="rounded-md border px-3 py-2 text-sm transition-colors"
+                                                    class:border-pink-500={audioSourceType === 'url'}
+                                                    class:bg-pink-50={audioSourceType === 'url'}
+                                                    class:border-gray-300={audioSourceType !== 'url'}
+                                                >
+                                                    {t('calendar.audio_url')}
+                                                </button>
+                                            </div>
+
+                                            <!-- Library Selection -->
+                                            {#if audioSourceType === 'library'}
+                                                <div>
+                                                    <select
+                                                        id="audio_file_id"
+                                                        name="audio_file_id"
+                                                        bind:value={selectedAudioFileId}
+                                                        class="flex h-9 w-full rounded-md border border-input bg-transparent px-3 py-2 text-sm shadow-sm transition-colors focus-visible:outline-none focus-visible:ring-1 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-50"
+                                                    >
+                                                        <option value="">{t('calendar.select_audio_file')}</option>
+                                                        {#each audioFiles as audioFile}
+                                                            <option value={audioFile.id}>{audioFile.name}</option>
+                                                        {/each}
+                                                    </select>
+                                                    <p class="mt-1 text-xs text-gray-500">
+                                                        {t('calendar.choose_from_library')}
+                                                        <a href="/admin/audio-files" target="_blank" class="text-pink-600 hover:underline"> {t('calendar.manage_library')}</a>
+                                                    </p>
+                                                    {#if errors.audio_file_id}
+                                                        <p class="mt-1 text-sm text-red-600">{errors.audio_file_id}</p>
+                                                    {/if}
+                                                </div>
+                                            {/if}
+
+                                            <!-- URL Input -->
+                                            {#if audioSourceType === 'url'}
+                                                <div>
+                                                    <Input
+                                                        id="audio_url"
+                                                        name="audio_url"
+                                                        type="url"
+                                                        bind:value={audioUrlInput}
+                                                        placeholder="https://example.com/audio.mp3"
+                                                    />
+                                                    <p class="mt-1 text-xs text-gray-500">{t('calendar.enter_audio_url')}</p>
+                                                    {#if errors.audio_url}
+                                                        <p class="mt-1 text-sm text-red-600">{errors.audio_url}</p>
+                                                    {/if}
+                                                </div>
+                                            {/if}
+
+                                            <!-- Hidden inputs to clear the other field -->
+                                            {#if audioSourceType === 'library'}
+                                                <input type="hidden" name="audio_url" value="" />
+                                            {:else if audioSourceType === 'url'}
+                                                <input type="hidden" name="audio_file_id" value="" />
+                                            {:else}
+                                                <input type="hidden" name="audio_url" value="" />
+                                                <input type="hidden" name="audio_file_id" value="" />
+                                            {/if}
+                                        </div>
                                     </div>
 
                                     <!-- Preview -->
                                     <div class="rounded-lg border-2 border-dashed border-pink-200 bg-pink-50 p-4">
-                                        <h4 class="mb-2 font-semibold text-pink-700">Preview</h4>
+                                        <h4 class="mb-2 font-semibold text-pink-700">{t('common.preview')}</h4>
                                         {#if selectedDay.title}
                                             <h5 class="mb-2 text-lg font-bold text-pink-700">{selectedDay.title}</h5>
                                         {/if}
                                         {#if currentGiftType === 'product' && selectedDay.product_code}
                                             <div class="mb-2 rounded bg-pink-100 p-2">
-                                                <p class="text-sm font-semibold text-pink-800">Code: {selectedDay.product_code}</p>
+                                                <p class="text-sm font-semibold text-pink-800">{t('calendar.code')}: {selectedDay.product_code}</p>
                                             </div>
                                         {/if}
                                         {#if (currentGiftType === 'image_text' || currentGiftType === 'product') && selectedDay.content_image_path}
                                             <div class="mb-2">
                                                 <img
                                                     src={`/storage/${selectedDay.content_image_path}`}
-                                                    alt="Preview"
+                                                    alt={t('common.preview')}
                                                     class="h-24 w-auto rounded-lg object-cover"
                                                     style="image-rendering: auto;"
                                                 />
@@ -316,9 +445,9 @@
                                         {#if selectedDay.content_text}
                                             <p class="whitespace-pre-wrap text-sm text-gray-700">{selectedDay.content_text}</p>
                                         {:else if currentGiftType === 'product'}
-                                            <p class="italic text-gray-400">No description yet...</p>
+                                            <p class="italic text-gray-400">{t('calendar.no_description_yet')}</p>
                                         {:else}
-                                            <p class="italic text-gray-400">No content yet...</p>
+                                            <p class="italic text-gray-400">{t('calendar.no_content_yet')}</p>
                                         {/if}
                                     </div>
 
@@ -329,7 +458,7 @@
                                         disabled={processing}
                                         class="bg-pink-500 hover:bg-pink-600"
                                     >
-                                        {processing ? 'Saving...' : 'Save Day ' + selectedDay.day_number}
+                                        {processing ? t('common.saving') : t('calendar.save_day', { day: selectedDay.day_number })}
                                     </Button>
                                 </div>
 
@@ -337,7 +466,7 @@
                                 {#if selectedDay.unlocked_at}
                                     <div class="rounded-lg bg-green-50 p-3 text-center">
                                         <p class="text-sm text-green-700">
-                                            ✓ This day was unlocked on {new Date(selectedDay.unlocked_at).toLocaleDateString()}
+                                            {t('calendar.day_unlocked_on', { date: new Date(selectedDay.unlocked_at).toLocaleDateString() })}
                                         </p>
                                     </div>
                                 {/if}
@@ -347,7 +476,7 @@
                         {/key}
                     {:else}
                         <div class="flex flex-col items-center justify-center py-12 text-center">
-                            <p class="text-gray-500">Please select a day to edit</p>
+                            <p class="text-gray-500">{t('calendar.please_select_day')}</p>
                         </div>
                     {/if}
                 </CardContent>
@@ -357,25 +486,25 @@
         <!-- Quick Stats -->
         <Card>
             <CardHeader>
-                <CardTitle>Calendar Statistics</CardTitle>
+                <CardTitle>{t('calendar.calendar_statistics')}</CardTitle>
             </CardHeader>
             <CardContent>
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
                     <div class="text-center">
                         <p class="text-2xl font-bold text-pink-600">{calendar.days?.length || 0}</p>
-                        <p class="text-sm text-gray-600">Total Days</p>
+                        <p class="text-sm text-gray-600">{t('calendar.total_days')}</p>
                     </div>
                     <div class="text-center">
                         <p class="text-2xl font-bold text-green-600">
                             {calendar.days?.filter(d => d.unlocked_at).length || 0}
                         </p>
-                        <p class="text-sm text-gray-600">Unlocked</p>
+                        <p class="text-sm text-gray-600">{t('calendar.unlocked')}</p>
                     </div>
                     <div class="text-center">
                         <p class="text-2xl font-bold text-gray-600">
                             {calendar.days?.filter(d => !d.unlocked_at).length || 0}
                         </p>
-                        <p class="text-sm text-gray-600">Locked</p>
+                        <p class="text-sm text-gray-600">{t('calendar.locked')}</p>
                     </div>
                     <div class="text-center">
                         <p class="text-2xl font-bold text-pink-600">
@@ -383,7 +512,7 @@
                                 ? Math.round((calendar.days.filter(d => d.unlocked_at).length / calendar.days.length) * 100)
                                 : 0}%
                         </p>
-                        <p class="text-sm text-gray-600">Progress</p>
+                        <p class="text-sm text-gray-600">{t('calendar.progress')}</p>
                     </div>
                 </div>
             </CardContent>

@@ -20,6 +20,7 @@ class CalendarDay extends Model
         'content_image_path',
         'product_code',
         'audio_url',
+        'audio_file_id',
         'unlocked_at',
     ];
 
@@ -36,12 +37,26 @@ class CalendarDay extends Model
         return $this->belongsTo(Calendar::class);
     }
 
+    public function audioFile(): BelongsTo
+    {
+        return $this->belongsTo(AudioFile::class);
+    }
+
+    public function getAudioUrlAttribute(): ?string
+    {
+        if ($this->audio_file_id && $this->audioFile) {
+            return $this->audioFile->url;
+        }
+
+        return $this->attributes['audio_url'] ?? null;
+    }
+
     public function isUnlocked(): bool
     {
         return $this->unlocked_at !== null;
     }
 
-    public function canBeUnlocked(?User $user = null): bool
+    public function canBeUnlocked(?User $user = null, bool $debugMode = false): bool
     {
         // If already unlocked, cannot unlock again
         if ($this->isUnlocked()) {
@@ -54,7 +69,7 @@ class CalendarDay extends Model
         }
 
         // Debug mode: allow all days to be unlocked
-        if (config('app.calendar_debug_mode')) {
+        if ($debugMode || config('app.calendar_debug_mode')) {
             return true;
         }
 

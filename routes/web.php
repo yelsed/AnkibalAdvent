@@ -17,7 +17,8 @@ Route::get('/', function () {
         return redirect()->route('calendars.index');
     }
 
-    return Inertia::render('Welcome');
+    // Show login page for unauthenticated users
+    return app(\App\Http\Controllers\Auth\AuthenticatedSessionController::class)->create(request());
 })->name('home');
 
 Route::get('dashboard', function () {
@@ -52,6 +53,15 @@ Route::middleware(['auth'])->group(function () {
 
         Route::put('calendar-days/{calendarDay}', [CalendarDayController::class, 'update'])
             ->name('calendar-days.update');
+
+        Route::get('admin/audio-files', [\App\Http\Controllers\AudioFileController::class, 'index'])
+            ->name('admin.audio-files.index');
+
+        Route::post('admin/audio-files', [\App\Http\Controllers\AudioFileController::class, 'store'])
+            ->name('admin.audio-files.store');
+
+        Route::delete('admin/audio-files/{audioFile}', [\App\Http\Controllers\AudioFileController::class, 'destroy'])
+            ->name('admin.audio-files.destroy');
     });
 });
 

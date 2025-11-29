@@ -7,43 +7,51 @@
     import { Link, page } from '@inertiajs/svelte';
     import { BookOpen, Calendar, Folder, LayoutGrid, Settings } from 'lucide-svelte';
     import AppLogo from './AppLogo.svelte';
+    import { t, initTranslations } from '@/lib/translations';
+
+    $effect(() => {
+        const translations = ($page.props as any)?.translations;
+        if (translations) {
+            initTranslations(translations);
+        }
+    });
 
     const user = $derived($page.props.auth.user);
     const isAdmin = $derived(user?.is_admin ?? false);
 
-    const mainNavItems: NavItem[] = [
+    const mainNavItems: NavItem[] = $derived([
         {
-            title: 'Dashboard',
+            title: t('common.dashboard'),
             href: '/dashboard',
             icon: LayoutGrid,
         },
         {
-            title: 'Advent Calendars',
+            title: t('common.advent_calendars'),
             href: '/calendars',
             icon: Calendar,
         },
-    ];
+    ]);
 
-    const adminNavItems: NavItem[] = [
+    const adminNavItems: NavItem[] = $derived([
         {
-            title: 'Calendar Management',
+            title: t('admin.calendar_management'),
             href: '/admin/calendars',
             icon: Settings,
         },
-    ];
+    ]);
 
-    const footerNavItems: NavItem[] = [
+    const footerNavItems: NavItem[] = $derived([
         {
-            title: 'Repository',
+            title: t('common.repository'),
             href: 'https://github.com/oseughu/svelte-starter-kit',
             icon: Folder,
         },
         {
-            title: 'Documentation',
+            title: t('common.documentation'),
             href: 'https://laravel.com/docs/starter-kits',
             icon: BookOpen,
         },
-    ];
+    ]);
 </script>
 
 <Sidebar collapsible="icon" variant="inset">
