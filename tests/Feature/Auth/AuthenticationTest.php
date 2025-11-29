@@ -56,7 +56,7 @@ test('guests can view the home page', function () {
     $response = $this->get('/');
 
     $response->assertStatus(200);
-    $response->assertInertia(fn ($page) => $page->component('Welcome'));
+    $response->assertInertia(fn ($page) => $page->component('auth/Login'));
 });
 
 test('authenticated regular users are redirected from home to calendars', function () {

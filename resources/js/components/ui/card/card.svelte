@@ -229,39 +229,62 @@
 	);
 
 	// Combine transform style with any existing style prop
-	const combinedStyle = $derived(() => {
+	const combinedStyle = $derived.by(() => {
 		if (!tiltEnabled && !styleProp) return styleProp;
-
-		const styles: string[] = [];
+		if (!tiltEnabled) return styleProp;
 
 		// Parse existing style prop if it's a string
-		let existingStyles: Record<string, string> = {};
+		const existingStyles: Record<string, string> = {};
+
 		if (styleProp) {
 			if (typeof styleProp === 'string') {
 				// Parse string style (e.g., "border-color: pink; color: red")
 				styleProp.split(';').forEach(rule => {
-					const [key, value] = rule.split(':').map(s => s.trim());
-					if (key && value) {
-						existingStyles[key] = value;
+					const trimmed = rule.trim();
+					if (trimmed) {
+						const colonIndex = trimmed.indexOf(':');
+						if (colonIndex > 0) {
+							const key = trimmed.substring(0, colonIndex).trim();
+							const value = trimmed.substring(colonIndex + 1).trim();
+							if (key && value) {
+								existingStyles[key] = value;
+							}
+						}
 					}
 				});
-			} else {
-				existingStyles = styleProp as Record<string, string>;
+			} else if (styleProp && typeof styleProp === 'object' && !Array.isArray(styleProp)) {
+				// Handle object style - convert to plain object
+				for (const key in styleProp) {
+					if (Object.prototype.hasOwnProperty.call(styleProp, key)) {
+						const value = (styleProp as Record<string, unknown>)[key];
+						if (typeof value === 'string' || typeof value === 'number') {
+							existingStyles[key] = String(value);
+						}
+					}
+				}
 			}
 		}
 
 		// Add transform style (this will override any existing transform)
 		if (transformStyle) {
-			existingStyles.transform = `${transformStyle}`;
+			existingStyles.transform = transformStyle;
 			existingStyles['transform-style'] = 'preserve-3d';
 		}
 
 		// Convert back to string
-		const styleString = Object.entries(existingStyles)
-			.map(([key, value]) => `${key}: ${value}`)
+		const entries = Object.keys(existingStyles);
+		if (entries.length === 0) return undefined;
+
+		const styleString = entries
+			.map((key) => {
+				const value = existingStyles[key];
+				// Handle CSS custom properties and kebab-case
+				const cssKey = key.replace(/([A-Z])/g, '-$1').toLowerCase();
+				return `${cssKey}: ${value}`;
+			})
 			.join('; ');
 
-		return styleString || undefined;
+		return styleString;
 	});
 
 	// Cleanup animation frame on component destroy
@@ -298,7 +321,7 @@
 	ontouchmove={handleTouchMove}
 	ontouchend={handleTouchEnd}
 	onclick={handleClick}
-	style={combinedStyle()}
+	style={combinedStyle}
 	class={cn(
 		"bg-card border-2 text-card-foreground flex flex-col gap-6 rounded-xl py-6 shadow-sm",
 		tiltEnabled && "cursor-pointer",
@@ -312,23 +335,27 @@
 
 <style>
 	:global(div[data-slot="card"]) {
+		box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 		will-change: transform;
 		backface-visibility: hidden;
 	}
 
-	:global(div[data-slot="card"]:hover) {
-		box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1),
-			0 10px 10px -5px rgba(0, 0, 0, 0.04);
+	:global(div[data-slot="card"].cursor-pointer:hover) {
+		box-shadow: 0 20px 25px -5px rgba(236, 72, 153, 0.3),
+			0 10px 10px -5px rgba(236, 72, 153, 0.2),
+			0 0 0 1px rgba(236, 72, 153, 0.1);
 		transition: box-shadow 0.2s ease-out;
 	}
 
-	:global(div[data-slot="card"].tilted) {
-		box-shadow: 0 25px 30px -5px rgba(0, 0, 0, 0.15),
-			0 15px 15px -5px rgba(0, 0, 0, 0.1);
+	:global(div[data-slot="card"].cursor-pointer.tilted) {
+		box-shadow: 0 25px 30px -5px rgba(236, 72, 153, 0.4),
+			0 15px 15px -5px rgba(236, 72, 153, 0.3),
+			0 0 20px rgba(236, 72, 153, 0.2);
 	}
 
-	:global(div[data-slot="card"]) {
+	:global(div[data-slot="card"].cursor-pointer) {
 		touch-action: manipulation;
 		-webkit-touch-callout: none;
+		transition: box-shadow 0.2s ease-out;
 	}
 </style>

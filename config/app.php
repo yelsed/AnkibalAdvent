@@ -55,6 +55,19 @@ return [
 
     /*
     |--------------------------------------------------------------------------
+    | Calendar Debug Enabled
+    |--------------------------------------------------------------------------
+    |
+    | When enabled, shows the debug mode toggle in the UI and allows users
+    | to enable debug mode. Automatically enabled when APP_ENV is not 'production'.
+    | In production, this is always false.
+    |
+    */
+
+    'calendar_debug_enabled' => env('APP_ENV', 'production') !== 'production',
+
+    /*
+    |--------------------------------------------------------------------------
     | Application URL
     |--------------------------------------------------------------------------
     |

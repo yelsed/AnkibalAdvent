@@ -84,10 +84,13 @@
     let justUnlocked = $state(false);
     let currentTime = $state(new Date());
 
+    // Check if debug mode is enabled from server config
+    const calendarDebugEnabled = $derived(($page.props as any)?.calendarDebugEnabled ?? false);
+
     // Debug mode toggle (stored in localStorage)
     const DEBUG_KEY = 'calendar_debug_mode';
     let debugMode = $state(
-        typeof localStorage !== 'undefined' ? localStorage.getItem(DEBUG_KEY) === 'true' : false
+        calendarDebugEnabled && typeof localStorage !== 'undefined' ? localStorage.getItem(DEBUG_KEY) === 'true' : false
     );
 
     function toggleDebugMode() {
@@ -154,8 +157,8 @@
             return true;
         }
 
-        // Debug mode: allow all days to be unlocked
-        if (debugMode) {
+        // Debug mode: allow all days to be unlocked (only if enabled in config)
+        if (calendarDebugEnabled && debugMode) {
             return true;
         }
 
@@ -201,7 +204,9 @@
 
         // Unlock the day
         try {
-            const response = await axios.post(`/calendar-days/${day.id}/unlock`);
+            const response = await axios.post(`/calendar-days/${day.id}/unlock`, {
+                debug_mode: debugMode
+            });
 
             // Update the day with the unlocked data - replace entire array to trigger reactivity
             const dayIndex = calendar.days.findIndex(d => d.id === day.id);
@@ -291,8 +296,8 @@
             </div>
 
             <div class="flex gap-2">
-                <!-- Debug Mode Toggle -->
-                {#if isAdmin}
+                <!-- Debug Mode Toggle (only shown if enabled in config) -->
+                {#if calendarDebugEnabled}
                 <Button
                     onclick={toggleDebugMode}
                     variant={debugMode ? 'default' : 'outline'}
@@ -331,7 +336,7 @@
         </div>
 
         <!-- Info Banner -->
-        {#if debugMode}
+        {#if calendarDebugEnabled && debugMode}
             <div class="rounded-lg bg-yellow-100 border-2 border-yellow-400 p-4 text-center">
                 <p class="text-yellow-800 font-semibold">
                     {t('calendar.debug_mode_all_days')}

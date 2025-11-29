@@ -40,7 +40,7 @@
 
         <!-- Quick Actions -->
         <div class="grid gap-4 md:grid-cols-3">
-            <Card class="cursor-pointer transition-all hover:scale-105 hover:shadow-lg" onclick={() => router.visit('/calendars')}>
+            <Card class="cursor-pointer transition-all hover:shadow-lg" onclick={() => router.visit('/calendars')}>
                 <CardHeader>
                     <div class="mb-2 flex h-12 w-12 items-center justify-center rounded-lg bg-pink-100 text-pink-600">
                         <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">

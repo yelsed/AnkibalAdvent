@@ -4,6 +4,7 @@
     import GiftContent from './GiftContent.svelte';
     import ConfettiEffect from './ConfettiEffect.svelte';
     import AudioPlayer from './AudioPlayer.svelte';
+    import Bow from './Bow.svelte';
     import { t, initTranslations } from '@/lib/translations';
 
     // Initialize translations immediately from page props
@@ -49,8 +50,13 @@
     <Drawer.Portal>
         <Drawer.Overlay class="fixed inset-0 z-[100] bg-black/40" />
         <Drawer.Content
-            class="fixed inset-x-0 bottom-0 z-[100] mt-24 flex h-auto max-h-[90vh] flex-col rounded-t-[10px] border bg-white"
+            class="fixed inset-x-0 bottom-0 z-[100] mt-24 flex h-auto max-h-[90vh] flex-col rounded-t-[10px] border bg-white overflow-visible"
         >
+            <!-- Decorative bow at the top - positioned to sit above the modal -->
+            <div class="absolute left-1/2 top-0 z-40 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+                <Bow width={80} height={80} class="drop-shadow-xl" />
+            </div>
+
             <div class="mx-auto mt-4 h-2 w-[100px] rounded-full bg-pink-200"></div>
 
             <div class="flex-1 overflow-y-auto p-6">

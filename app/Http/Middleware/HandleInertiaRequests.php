@@ -64,6 +64,7 @@ class HandleInertiaRequests extends Middleware
                 'dashboard' => trans('dashboard'),
                 'admin' => trans('admin'),
             ],
+            'calendarDebugEnabled' => config('app.calendar_debug_enabled'),
         ];
     }
 }

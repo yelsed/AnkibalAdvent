@@ -56,7 +56,7 @@ class CalendarDay extends Model
         return $this->unlocked_at !== null;
     }
 
-    public function canBeUnlocked(?User $user = null): bool
+    public function canBeUnlocked(?User $user = null, bool $debugMode = false): bool
     {
         // If already unlocked, cannot unlock again
         if ($this->isUnlocked()) {
@@ -69,7 +69,7 @@ class CalendarDay extends Model
         }
 
         // Debug mode: allow all days to be unlocked
-        if (config('app.calendar_debug_mode')) {
+        if ($debugMode || config('app.calendar_debug_mode')) {
             return true;
         }
 

@@ -17,7 +17,8 @@ Route::get('/', function () {
         return redirect()->route('calendars.index');
     }
 
-    return Inertia::render('Welcome');
+    // Show login page for unauthenticated users
+    return app(\App\Http\Controllers\Auth\AuthenticatedSessionController::class)->create(request());
 })->name('home');
 
 Route::get('dashboard', function () {

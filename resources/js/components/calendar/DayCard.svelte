@@ -1,4 +1,6 @@
 <script lang="ts">
+    import Bow from './Bow.svelte';
+
     interface CalendarDay {
         id: number;
         day_number: number;
@@ -254,27 +256,33 @@
     });
 </script>
 
-<button
-    bind:this={cardElement}
-    type="button"
-    onclick={handleClick}
-    disabled={!isUnlocked && !canUnlock}
-    onmousemove={handleMouseMove}
-    onmouseenter={handleMouseEnter}
-    onmouseleave={handleMouseLeave}
-    ontouchstart={handleTouchStart}
-    ontouchmove={handleTouchMove}
-    ontouchend={handleTouchEnd}
-    style="transform: {transformStyle}; transform-style: preserve-3d;"
-    class="group relative flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl disabled:cursor-not-allowed disabled:opacity-50"
-    class:unlocked={isUnlocked}
-    class:locked={!isUnlocked}
-    class:tilt-enabled={isUnlocked || canUnlock}
-    class:tilted={isTilted && (isUnlocked || canUnlock)}
->
+<div class="relative w-full overflow-visible">
+    <button
+        bind:this={cardElement}
+        type="button"
+        onclick={handleClick}
+        disabled={!isUnlocked && !canUnlock}
+        onmousemove={handleMouseMove}
+        onmouseenter={handleMouseEnter}
+        onmouseleave={handleMouseLeave}
+        ontouchstart={handleTouchStart}
+        ontouchmove={handleTouchMove}
+        ontouchend={handleTouchEnd}
+        style="transform: {transformStyle}; transform-style: preserve-3d;"
+        class="group relative flex aspect-square w-full items-center justify-center overflow-visible rounded-xl disabled:cursor-not-allowed disabled:opacity-50"
+        class:unlocked={isUnlocked}
+        class:locked={!isUnlocked}
+        class:tilt-enabled={isUnlocked || canUnlock}
+        class:tilted={isTilted && (isUnlocked || canUnlock)}
+    >
+        <!-- Decorative bow at the top - inside button so it moves with tilt -->
+        <div class="absolute left-1/2 top-0 z-30 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <Bow width={60} height={60} class="drop-shadow-lg" />
+        </div>
+
     {#if isUnlocked}
         <!-- Unlocked state with gradient background -->
-        <div class="absolute inset-0 bg-gradient-to-br from-pink-400 to-pink-600"></div>
+        <div class="absolute inset-0 bg-gradient-to-br from-pink-400 to-pink-600 rounded-xl"></div>
         <div class="relative z-10 flex flex-col items-center gap-2 text-white">
             <span class="text-5xl font-bold">{day.day_number}</span>
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -289,7 +297,7 @@
     {:else}
         <!-- Locked state with gift wrap pattern -->
         <div
-            class="absolute inset-0"
+            class="absolute inset-0 rounded-xl"
             style="background-image: repeating-linear-gradient(
                 45deg,
                 #fce7f3 0px,
@@ -300,16 +308,9 @@
         ></div>
 
         <!-- Ribbon effect -->
-        <div class="absolute inset-0">
+        <div class="absolute inset-0 rounded-xl overflow-hidden">
             <div class="absolute left-1/2 top-0 h-full w-4 -translate-x-1/2 bg-pink-400 opacity-80"></div>
             <div class="absolute left-0 top-1/2 h-4 w-full -translate-y-1/2 bg-pink-400 opacity-80"></div>
-        </div>
-
-        <!-- Bow on top -->
-        <div class="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
-            <div class="flex items-center justify-center">
-                <div class="h-8 w-8 rounded-full bg-pink-500 shadow-lg"></div>
-            </div>
         </div>
 
         <div class="relative z-10 flex flex-col items-center gap-2">
@@ -335,9 +336,10 @@
 
     <!-- Hover effect -->
     {#if isUnlocked || canUnlock}
-        <div class="absolute inset-0 bg-white opacity-0 transition-opacity group-hover:opacity-10"></div>
+        <div class="absolute inset-0 bg-white opacity-0 transition-opacity group-hover:opacity-10 rounded-xl"></div>
     {/if}
-</button>
+    </button>
+</div>
 
 <style>
     button {

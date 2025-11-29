@@ -29,7 +29,14 @@ class CalendarDayController extends Controller
             ]);
         }
 
-        if (! $calendarDay->canBeUnlocked(Auth::user())) {
+        // Check if debug mode is enabled (from request or config)
+        // Only accept debug_mode from request if calendar_debug_enabled is true
+        $debugMode = false;
+        if (config('app.calendar_debug_enabled')) {
+            $debugMode = request()->boolean('debug_mode') || config('app.calendar_debug_mode');
+        }
+
+        if (! $calendarDay->canBeUnlocked(Auth::user(), $debugMode)) {
             return response()->json([
                 'message' => __('calendar.this_day_cannot_unlocked_yet'),
             ], 403);
