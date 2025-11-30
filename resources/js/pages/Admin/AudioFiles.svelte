@@ -37,7 +37,7 @@
 
     let showUploadDialog = $state(false);
     let formKey = $state(0);
-    let fileInput: HTMLInputElement | undefined;
+    let fileInput: HTMLInputElement;
     let selectedFile: File | null = $state(null);
     let fileName = $state('');
 

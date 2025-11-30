@@ -25,7 +25,8 @@ class CalendarPolicy
             return true;
         }
 
-        return $user->id === $calendar->user_id;
+        // Owners and recipients can view the calendar
+        return $user->id === $calendar->owner_id || $user->id === $calendar->recipient_id;
     }
 
     /**
@@ -47,7 +48,8 @@ class CalendarPolicy
             return true;
         }
 
-        return $user->id === $calendar->user_id;
+        // Only owners can update the calendar (recipients cannot)
+        return $user->id === $calendar->owner_id;
     }
 
     /**
@@ -60,8 +62,8 @@ class CalendarPolicy
             return true;
         }
 
-        // Users can delete their own calendars
-        return $user->id === $calendar->user_id;
+        // Only owners can delete calendars
+        return $user->id === $calendar->owner_id;
     }
 
     /**
@@ -69,7 +71,7 @@ class CalendarPolicy
      */
     public function restore(User $user, Calendar $calendar): bool
     {
-        return $user->id === $calendar->user_id;
+        return $user->id === $calendar->owner_id;
     }
 
     /**
@@ -77,6 +79,6 @@ class CalendarPolicy
      */
     public function forceDelete(User $user, Calendar $calendar): bool
     {
-        return $user->id === $calendar->user_id;
+        return $user->id === $calendar->owner_id;
     }
 }

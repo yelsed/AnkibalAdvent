@@ -20,7 +20,14 @@ class CalendarController extends Controller
     {
         $this->authorize('viewAny', Calendar::class);
 
-        $calendars = auth()->user()->calendars()->latest()->get();
+        $user = auth()->user();
+        // Get both calendars owned by user and calendars where user is recipient
+        $calendars = Calendar::where(function ($query) use ($user) {
+            $query->where('owner_id', $user->id)
+                ->orWhere('recipient_id', $user->id);
+        })
+            ->latest()
+            ->get();
 
         return Inertia::render('Calendars/Index', [
             'calendars' => $calendars,
@@ -35,7 +42,8 @@ class CalendarController extends Controller
         $this->authorize('create', Calendar::class);
 
         $validated = $request->validated();
-        $calendar = auth()->user()->calendars()->create($validated);
+        $validated['owner_id'] = auth()->user()->id;
+        $calendar = Calendar::create($validated);
 
         // Create all 31 days for the calendar
         for ($day = 1; $day <= 31; $day++) {
@@ -60,16 +68,19 @@ class CalendarController extends Controller
 
         $calendar->load(['days' => function ($query) {
             $query->orderBy('day_number');
-        }, 'days.audioFile', 'user']);
+        }, 'days.audioFile', 'owner', 'recipient', 'user']); // user for backward compatibility
 
-        $isAdmin = auth()->user()->is_admin;
-        $isOwner = auth()->user()->id === $calendar->user_id;
+        $user = auth()->user();
+        $isAdmin = $user->is_admin;
+        $isOwner = $user->id === $calendar->owner_id;
+        $isRecipient = $user->id === $calendar->recipient_id;
 
         return Inertia::render('Calendars/Show', [
             'calendar' => $calendar,
-            'canManage' => $isAdmin,
+            'canManage' => $isAdmin || $isOwner,
             'isAdmin' => $isAdmin,
             'isOwner' => $isOwner,
+            'isRecipient' => $isRecipient,
         ]);
     }
 

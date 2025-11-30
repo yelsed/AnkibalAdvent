@@ -41,14 +41,17 @@
     let secondaryColor = $state('#fbbf24');
     let seasonalTheme = $state('kerst');
 
-    // Reset form when dialog opens
+    // Reset form when dialog opens - prevent infinite loops by tracking previous state
+    let previousDialogState = $state(false);
     $effect(() => {
-        if (showCreateDialog) {
+        // Only reset when dialog changes from closed to open
+        if (showCreateDialog && !previousDialogState) {
             formKey++;
             themeType = 'single';
             secondaryColor = '#fbbf24';
             seasonalTheme = 'kerst';
         }
+        previousDialogState = showCreateDialog;
     });
 
     const breadcrumbs = $derived([
@@ -211,7 +214,7 @@
                                                 <div class="mt-3 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-4">
                                                     {#each defaultSeasonalRanges as range}
                                                         {@const theme = themes[range.theme]}
-                                                        {@const dayRange = Array.isArray(range.days) ? range.days : range.days}
+                                                        {@const dayRange = range.days}
                                                         {@const firstDay = Math.min(...dayRange)}
                                                         {@const lastDay = Math.max(...dayRange)}
                                                         <div class="flex items-center gap-3">

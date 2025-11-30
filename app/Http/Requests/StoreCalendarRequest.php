@@ -47,11 +47,28 @@ class StoreCalendarRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        // If not admin, set user_id to current user
+        // Set user_id to current user if not provided
+        // For non-admins: always set to current user
+        // For admins: only set if neither user_id nor email is provided (default to self)
         if (!$this->user()?->is_admin) {
             $this->merge([
                 'user_id' => $this->user()->id,
             ]);
+        } elseif (!$this->has('user_id') && !$this->has('email')) {
+            // Admin creating calendar for themselves via /calendars route
+            $this->merge([
+                'user_id' => $this->user()->id,
+            ]);
+        }
+
+        // Decode seasonal_config if it's a JSON string
+        if ($this->has('seasonal_config') && is_string($this->seasonal_config)) {
+            $decoded = json_decode($this->seasonal_config, true);
+            if (json_last_error() === JSON_ERROR_NONE) {
+                $this->merge([
+                    'seasonal_config' => $decoded,
+                ]);
+            }
         }
     }
 

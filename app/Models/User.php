@@ -47,8 +47,27 @@ class User extends Authenticatable
         ];
     }
 
+    /**
+     * Calendars owned by this user (they manage the calendar)
+     */
+    public function ownedCalendars(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Calendar::class, 'owner_id');
+    }
+
+    /**
+     * Calendars where this user is the recipient (they can unlock days)
+     */
+    public function recipientCalendars(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(Calendar::class, 'recipient_id');
+    }
+
+    /**
+     * Backward compatibility: calendars() returns owned calendars
+     */
     public function calendars(): \Illuminate\Database\Eloquent\Relations\HasMany
     {
-        return $this->hasMany(Calendar::class);
+        return $this->ownedCalendars();
     }
 }
