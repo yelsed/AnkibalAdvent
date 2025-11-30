@@ -34,7 +34,8 @@ class CalendarController extends Controller
     {
         $this->authorize('create', Calendar::class);
 
-        $calendar = auth()->user()->calendars()->create($request->validated());
+        $validated = $request->validated();
+        $calendar = auth()->user()->calendars()->create($validated);
 
         // Create all 31 days for the calendar
         for ($day = 1; $day <= 31; $day++) {

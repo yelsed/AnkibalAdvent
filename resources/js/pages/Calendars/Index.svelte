@@ -7,7 +7,9 @@
     import { Label } from '@/components/ui/label';
     import { Textarea } from '@/components/ui/textarea';
     import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+    import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
     import { t, initTranslations } from '@/lib/translations';
+    import { themes, defaultSeasonalRanges } from '@/lib/themes';
 
     // Initialize translations immediately from page props
     const translations = ($page.props as any)?.translations;
@@ -35,11 +37,17 @@
 
     let showCreateDialog = $state(false);
     let formKey = $state(0);
+    let themeType = $state<'single' | 'dual' | 'seasonal'>('single');
+    let secondaryColor = $state('#fbbf24');
+    let seasonalTheme = $state('kerst');
 
     // Reset form when dialog opens
     $effect(() => {
         if (showCreateDialog) {
             formKey++;
+            themeType = 'single';
+            secondaryColor = '#fbbf24';
+            seasonalTheme = 'kerst';
         }
     });
 
@@ -133,17 +141,119 @@
                                     </div>
 
                                     <div>
-                                        <Label for="theme_color">{t('calendar.theme_color')}</Label>
-                                        <Input
-                                            id="theme_color"
-                                            name="theme_color"
-                                            type="color"
-                                            defaultValue="#ec4899"
-                                        />
-                                        {#if errors.theme_color}
-                                            <p class="mt-1 text-sm text-red-600">{errors.theme_color}</p>
+                                        <Label>{t('calendar.theme_type')}</Label>
+                                        <RadioGroup bind:value={themeType} class="mt-2">
+                                            <div class="flex items-center space-x-2">
+                                                <RadioGroupItem value="single" id="theme-single" />
+                                                <Label for="theme-single" class="cursor-pointer">Single Color</Label>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <RadioGroupItem value="dual" id="theme-dual" />
+                                                <Label for="theme-dual" class="cursor-pointer">Dual Color</Label>
+                                            </div>
+                                            <div class="flex items-center space-x-2">
+                                                <RadioGroupItem value="seasonal" id="theme-seasonal" />
+                                                <Label for="theme-seasonal" class="cursor-pointer">Seasonal Theme</Label>
+                                            </div>
+                                        </RadioGroup>
+                                        <input type="hidden" name="theme_type" value={themeType} />
+                                        {#if errors.theme_type}
+                                            <p class="mt-1 text-sm text-red-600">{errors.theme_type}</p>
                                         {/if}
                                     </div>
+
+                                    {#if themeType === 'single'}
+                                        <div>
+                                            <Label for="theme_color">{t('calendar.theme_color')}</Label>
+                                            <Input
+                                                id="theme_color"
+                                                name="theme_color"
+                                                type="color"
+                                                defaultValue="#ec4899"
+                                            />
+                                            {#if errors.theme_color}
+                                                <p class="mt-1 text-sm text-red-600">{errors.theme_color}</p>
+                                            {/if}
+                                        </div>
+                                    {:else if themeType === 'dual'}
+                                        <div>
+                                            <Label for="theme_color">Primary Color</Label>
+                                            <Input
+                                                id="theme_color"
+                                                name="theme_color"
+                                                type="color"
+                                                defaultValue="#ec4899"
+                                            />
+                                            {#if errors.theme_color}
+                                                <p class="mt-1 text-sm text-red-600">{errors.theme_color}</p>
+                                            {/if}
+                                        </div>
+                                        <div>
+                                            <Label for="secondary_color">Secondary Color</Label>
+                                            <Input
+                                                id="secondary_color"
+                                                name="secondary_color"
+                                                type="color"
+                                                bind:value={secondaryColor}
+                                                defaultValue="#fbbf24"
+                                            />
+                                            {#if errors.secondary_color}
+                                                <p class="mt-1 text-sm text-red-600">{errors.secondary_color}</p>
+                                            {/if}
+                                        </div>
+                                    {:else if themeType === 'seasonal'}
+                                        <div class="space-y-4">
+                                            <div>
+                                                <Label>Seasonal Theme Configuration</Label>
+                                                <p class="mt-1 text-sm text-gray-600">
+                                                    De kalender gebruikt automatisch verschillende themes per periode:
+                                                </p>
+                                                <div class="mt-3 space-y-2 rounded-lg border border-gray-200 bg-gray-50 p-4">
+                                                    {#each defaultSeasonalRanges as range}
+                                                        {@const theme = themes[range.theme]}
+                                                        {@const dayRange = Array.isArray(range.days) ? range.days : range.days}
+                                                        {@const firstDay = Math.min(...dayRange)}
+                                                        {@const lastDay = Math.max(...dayRange)}
+                                                        <div class="flex items-center gap-3">
+                                                            <div
+                                                                class="h-8 w-8 rounded-full border-2 border-white shadow-sm"
+                                                                style="background-color: {theme.primary};"
+                                                            ></div>
+                                                            <div class="flex-1">
+                                                                <p class="font-medium text-gray-900">{theme.name}</p>
+                                                                <p class="text-sm text-gray-600">
+                                                                    Dagen {firstDay === lastDay ? firstDay : `${firstDay}-${lastDay}`}
+                                                                    {#if theme.secondary}
+                                                                        <span class="ml-2">
+                                                                            (
+                                                                            <span
+                                                                class="inline-block h-3 w-3 rounded-full align-middle"
+                                                                style="background-color: {theme.primary};"
+                                                            ></span>
+                                                                            +
+                                                                            <span
+                                                                class="inline-block h-3 w-3 rounded-full align-middle"
+                                                                style="background-color: {theme.secondary};"
+                                                            ></span>
+                                                                            )
+                                                                        </span>
+                                                                    {/if}
+                                                                </p>
+                                                            </div>
+                                                        </div>
+                                                    {/each}
+                                                </div>
+                                                <input
+                                                    type="hidden"
+                                                    name="seasonal_config"
+                                                    value={JSON.stringify({ ranges: defaultSeasonalRanges })}
+                                                />
+                                                {#if errors.seasonal_config}
+                                                    <p class="mt-1 text-sm text-red-600">{errors.seasonal_config}</p>
+                                                {/if}
+                                            </div>
+                                        </div>
+                                    {/if}
 
                                     <div class="flex justify-end gap-2 pt-4">
                                         <Button

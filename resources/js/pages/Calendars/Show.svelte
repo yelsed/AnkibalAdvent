@@ -8,6 +8,8 @@
     import { Button } from '@/components/ui/button';
     import { toast } from 'svelte-sonner';
     import { getCountdownString, getNextDayForCountdown } from '@/lib/countdown';
+    import { getThemeColors } from '@/lib/colors';
+    import { getThemeForDay } from '@/lib/themes';
     import { t, initTranslations } from '@/lib/translations';
 
     // Initialize translations immediately from page props
@@ -48,6 +50,7 @@
         product_code: string | null;
         audio_url: string | null;
         unlocked_at: string | null;
+        theme_override?: any;
     }
 
     interface User {
@@ -63,6 +66,9 @@
         description: string | null;
         theme_color: string;
         audio_url: string | null;
+        theme_type?: 'single' | 'dual' | 'seasonal';
+        secondary_color?: string | null;
+        seasonal_config?: any;
         days: CalendarDay[];
         user?: User;
     }
@@ -79,6 +85,18 @@
     // Convert calendar prop to state so we can mutate it reactively
     let calendar = $state(initialCalendar);
 
+    // Set defaults for theme_type if not present (backward compatibility)
+    if (!calendar.theme_type) {
+        calendar.theme_type = 'single';
+    }
+
+    const themeColors = $derived(
+        getThemeColors(
+            calendar.theme_color,
+            calendar.theme_type === 'dual' ? calendar.secondary_color : null
+        )
+    );
+
     let selectedDay = $state<CalendarDay | null>(null);
     let modalOpen = $state(false);
     let justUnlocked = $state(false);
@@ -89,9 +107,14 @@
 
     // Debug mode toggle (stored in localStorage)
     const DEBUG_KEY = 'calendar_debug_mode';
-    let debugMode = $state(
-        calendarDebugEnabled && typeof localStorage !== 'undefined' ? localStorage.getItem(DEBUG_KEY) === 'true' : false
-    );
+    let debugMode = $state(false);
+
+    // Initialize debug mode from localStorage
+    $effect(() => {
+        if (calendarDebugEnabled && typeof localStorage !== 'undefined') {
+            debugMode = localStorage.getItem(DEBUG_KEY) === 'true';
+        }
+    });
 
     function toggleDebugMode() {
         debugMode = !debugMode;
@@ -277,7 +300,9 @@
         <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div>
                 <div class="flex items-center gap-2">
-                    <h1 class="text-3xl font-bold text-pink-700 sm:text-4xl">{calendar.title}</h1>
+                    <h1 class="text-3xl font-bold sm:text-4xl" style="color: {themeColors.darker};">
+                        {calendar.title}
+                    </h1>
                     {#if isAdmin}
                         <span class="rounded-full bg-blue-100 px-2 py-1 text-xs font-semibold text-blue-700">
                             {t('common.admin')}
@@ -319,7 +344,17 @@
                 {/if}
 
                 {#if canManage}
-                    <Button onclick={goToAdmin} variant="outline" class="border-pink-200 text-pink-600 hover:bg-pink-50">
+                    <Button
+                        onclick={goToAdmin}
+                        variant="outline"
+                        style="border-color: {themeColors.lighter}; color: {themeColors.dark};"
+                        onmouseenter={(e) => {
+                            e.currentTarget.style.backgroundColor = themeColors.light;
+                        }}
+                        onmouseleave={(e) => {
+                            e.currentTarget.style.backgroundColor = 'transparent';
+                        }}
+                    >
                         <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                             <path
                                 stroke-linecap="round"
@@ -343,14 +378,14 @@
                 </p>
             </div>
         {:else if !isDecember}
-            <div class="rounded-lg bg-pink-50 p-4 text-center">
-                <p class="text-pink-700">
+            <div class="rounded-lg p-4 text-center" style="background-color: {themeColors.light};">
+                <p style="color: {themeColors.darker};">
                     <span class="font-semibold">{t('calendar.note')}:</span> {t('calendar.days_only_unlock_december')}
                 </p>
             </div>
         {:else}
-            <div class="rounded-lg bg-pink-50 p-4 text-center">
-                <p class="text-pink-700">
+            <div class="rounded-lg p-4 text-center" style="background-color: {themeColors.light};">
+                <p style="color: {themeColors.darker};">
                     {t('calendar.can_unlock_days', { day: currentDay })}
                 </p>
             </div>
@@ -358,40 +393,58 @@
 
         <!-- Calendar Audio -->
         {#if calendar.audio_url}
-            <div class="rounded-lg border border-pink-200 bg-pink-50 p-4">
-                <h3 class="mb-3 text-lg font-semibold text-pink-700">{t('calendar.calendar_music')}</h3>
-                <AudioPlayer audioUrl={calendar.audio_url} loop={true} />
+            <div
+                class="rounded-lg border p-4"
+                style="border-color: {themeColors.lighter}; background-color: {themeColors.light};"
+            >
+                <h3 class="mb-3 text-lg font-semibold" style="color: {themeColors.darker};">
+                    {t('calendar.calendar_music')}
+                </h3>
+                <AudioPlayer audioUrl={calendar.audio_url} loop={true} themeColor={calendar.theme_color} />
             </div>
         {/if}
 
         <!-- Calendar Grid -->
         <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
             {#each calendar.days as day (day.id)}
+                {@const dayTheme = getThemeForDay(
+                    calendar.theme_type || 'single',
+                    day.day_number,
+                    calendar.theme_color,
+                    calendar.secondary_color || null,
+                    calendar.seasonal_config,
+                    day.theme_override
+                )}
                 <DayCard
                     {day}
                     canUnlock={canUnlockDay(day)}
                     countdown={countdownMap.get(day.day_number) || null}
                     onclick={() => handleDayClick(day)}
+                    themeColor={dayTheme.primary}
+                    secondaryColor={dayTheme.secondary}
                 />
             {/each}
         </div>
 
         <!-- Stats -->
-        <div class="grid grid-cols-2 gap-4 rounded-lg bg-gradient-to-r from-pink-50 to-pink-100 p-6 sm:grid-cols-3">
+        <div
+            class="grid grid-cols-2 gap-4 rounded-lg p-6 sm:grid-cols-3"
+            style="background-color: {themeColors.light};"
+        >
             <div class="text-center">
-                <p class="text-3xl font-bold text-pink-600">
+                <p class="text-3xl font-bold" style="color: {themeColors.dark};">
                     {calendar.days.filter(d => d.unlocked_at).length}
                 </p>
                 <p class="text-sm text-gray-600">{t('calendar.days_unlocked')}</p>
             </div>
             <div class="text-center">
-                <p class="text-3xl font-bold text-pink-600">
+                <p class="text-3xl font-bold" style="color: {themeColors.dark};">
                     {calendar.days.length - calendar.days.filter(d => d.unlocked_at).length}
                 </p>
                 <p class="text-sm text-gray-600">{t('calendar.days_remaining')}</p>
             </div>
             <div class="col-span-2 text-center sm:col-span-1">
-                <p class="text-3xl font-bold text-pink-600">
+                <p class="text-3xl font-bold" style="color: {themeColors.dark};">
                     {Math.round((calendar.days.filter(d => d.unlocked_at).length / calendar.days.length) * 100)}%
                 </p>
                 <p class="text-sm text-gray-600">{t('calendar.complete')}</p>
@@ -433,5 +486,21 @@
     </div>
 
     <!-- Day Modal -->
-    <DayModal day={selectedDay} bind:open={modalOpen} bind:justUnlocked />
+    {#if selectedDay}
+        {@const dayTheme = getThemeForDay(
+            calendar.theme_type || 'single',
+            selectedDay.day_number,
+            calendar.theme_color,
+            calendar.secondary_color || null,
+            calendar.seasonal_config,
+            selectedDay.theme_override
+        )}
+        <DayModal
+            day={selectedDay}
+            bind:open={modalOpen}
+            bind:justUnlocked
+            themeColor={dayTheme.primary}
+            secondaryColor={dayTheme.secondary}
+        />
+    {/if}
 </AppLayout>

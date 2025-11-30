@@ -3,9 +3,155 @@
         width?: number | string;
         height?: number | string;
         class?: string;
+        themeColor?: string;
+        secondaryColor?: string | null;
     }
 
-    let { width = 2122, height = 2122, class: className = '' }: Props = $props();
+    let { width = 2122, height = 2122, class: className = '', themeColor = '#ec4899', secondaryColor = null }: Props = $props();
+
+    // Convert hex to RGB
+    function hexToRgb(hex: string): { r: number; g: number; b: number } | null {
+        const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+        return result
+            ? {
+                  r: parseInt(result[1], 16),
+                  g: parseInt(result[2], 16),
+                  b: parseInt(result[3], 16),
+              }
+            : null;
+    }
+
+    // Convert RGB to HSL
+    function rgbToHsl(r: number, g: number, b: number): { h: number; s: number; l: number } {
+        r /= 255;
+        g /= 255;
+        b /= 255;
+
+        const max = Math.max(r, g, b);
+        const min = Math.min(r, g, b);
+        let h = 0;
+        let s = 0;
+        const l = (max + min) / 2;
+
+        if (max !== min) {
+            const d = max - min;
+            s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+
+            switch (max) {
+                case r:
+                    h = ((g - b) / d + (g < b ? 6 : 0)) / 6;
+                    break;
+                case g:
+                    h = ((b - r) / d + 2) / 6;
+                    break;
+                case b:
+                    h = ((r - g) / d + 4) / 6;
+                    break;
+            }
+        }
+
+        return { h: h * 360, s: s * 100, l: l * 100 };
+    }
+
+    // Convert HSL to RGB
+    function hslToRgb(h: number, s: number, l: number): { r: number; g: number; b: number } {
+        h /= 360;
+        s /= 100;
+        l /= 100;
+
+        let r: number, g: number, b: number;
+
+        if (s === 0) {
+            r = g = b = l;
+        } else {
+            const hue2rgb = (p: number, q: number, t: number) => {
+                if (t < 0) t += 1;
+                if (t > 1) t -= 1;
+                if (t < 1 / 6) return p + (q - p) * 6 * t;
+                if (t < 1 / 2) return q;
+                if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+                return p;
+            };
+
+            const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+            const p = 2 * l - q;
+
+            r = hue2rgb(p, q, h + 1 / 3);
+            g = hue2rgb(p, q, h);
+            b = hue2rgb(p, q, h - 1 / 3);
+        }
+
+        return {
+            r: Math.round(r * 255),
+            g: Math.round(g * 255),
+            b: Math.round(b * 255),
+        };
+    }
+
+    // Convert RGB to hex
+    function rgbToHex(r: number, g: number, b: number): string {
+        return '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('');
+    }
+
+    // Generate color variations based on theme color
+    // The strik (lint) should use secondary color as main color if available
+    // For example: Kerst has red primary and green secondary, but the strik should be green with red accents
+    // Original colors: #D9759B (main), #C6618A (darker1), #A44B74 (darker2), #B04576 (darker3), #E887AF (lighter)
+    const bowColors = $derived.by(() => {
+        // If secondary color exists, use it as the main color for the strik
+        // Otherwise use themeColor
+        const baseColor = secondaryColor || themeColor;
+        const accentColor = secondaryColor ? themeColor : null;
+
+        const rgb = hexToRgb(baseColor);
+        if (!rgb) {
+            // Fallback to default pink colors
+            return {
+                main: '#D9759B',
+                darker1: '#C6618A',
+                darker2: '#A44B74',
+                darker3: '#B04576',
+                lighter: accentColor || '#E887AF', // Use primary color as accent if secondary exists
+                secondary: secondaryColor,
+            };
+        }
+
+        const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+
+        // Generate variations by adjusting lightness
+        // Main color (slightly lighter than base) - this is the secondary color if available
+        const mainRgb = hslToRgb(hsl.h, hsl.s, Math.min(100, hsl.l + 5));
+        // Darker variations - all based on secondary color (or primary if no secondary)
+        const darker1Rgb = hslToRgb(hsl.h, hsl.s, Math.max(0, hsl.l - 8));
+        const darker2Rgb = hslToRgb(hsl.h, hsl.s, Math.max(0, hsl.l - 20));
+        const darker3Rgb = hslToRgb(hsl.h, hsl.s, Math.max(0, hsl.l - 15));
+        // Lighter variation - use primary color as accent if secondary exists
+        let lighterColor: string;
+        if (accentColor) {
+            // Use primary color for lighter accents
+            const accentRgb = hexToRgb(accentColor);
+            if (accentRgb) {
+                const accentHsl = rgbToHsl(accentRgb.r, accentRgb.g, accentRgb.b);
+                const lighterRgb = hslToRgb(accentHsl.h, accentHsl.s, Math.min(100, accentHsl.l + 15));
+                lighterColor = rgbToHex(lighterRgb.r, lighterRgb.g, lighterRgb.b);
+            } else {
+                const lighterRgb = hslToRgb(hsl.h, hsl.s, Math.min(100, hsl.l + 15));
+                lighterColor = rgbToHex(lighterRgb.r, lighterRgb.g, lighterRgb.b);
+            }
+        } else {
+            const lighterRgb = hslToRgb(hsl.h, hsl.s, Math.min(100, hsl.l + 15));
+            lighterColor = rgbToHex(lighterRgb.r, lighterRgb.g, lighterRgb.b);
+        }
+
+        return {
+            main: rgbToHex(mainRgb.r, mainRgb.g, mainRgb.b),
+            darker1: rgbToHex(darker1Rgb.r, darker1Rgb.g, darker1Rgb.b),
+            darker2: rgbToHex(darker2Rgb.r, darker2Rgb.g, darker2Rgb.b),
+            darker3: rgbToHex(darker3Rgb.r, darker3Rgb.g, darker3Rgb.b),
+            lighter: lighterColor,
+            secondary: secondaryColor,
+        };
+    });
 </script>
 
 <svg
@@ -24,7 +170,7 @@
 >
     <g>
         <path
-            style="fill:#D9759B;"
+            style="fill:{bowColors.main};"
             d="M1805.871,1580.628c-8.135-13.422-16.904-27.114-26.346-41.045
 		c-3.147-4.644-6.37-9.314-9.667-14.009c-49.474-70.431-116.109-146.558-204.929-224.357c0,0-71.075-63.01-137.153-142.54
 		c-4.536-5.46-9.051-10.987-13.515-16.588c-0.628-0.788-1.249-1.584-1.874-2.375c-4.544-5.736-9.042-11.525-13.451-17.372
@@ -73,7 +219,7 @@
 		C1811.225,1589.546,1808.583,1585.102,1805.871,1580.628z"
         />
         <path
-            style="fill:#C6618A;"
+            style="fill:{bowColors.darker1};"
             d="M1894.504,968.29c-0.468-6.319-1.085-12.806-1.801-19.392
 		c-11.973-110.165-56.289-252.385-56.289-252.385c17.936-53.808,33.303-166.556,38.056-255.675c0.32-5.986,0.59-11.861,0.811-17.609
 		c0.029-0.762,0.062-1.53,0.089-2.288c0.606-16.69,0.784-32.236,0.464-45.996c-2.008-86.419,48.548-161.161,4.556-195.923
@@ -122,7 +268,7 @@
 		c0.76-1.034,1.449-2.158,2.142-3.277c0.252-0.408,0.536-0.775,0.78-1.193C1925.658,1088.761,1894.504,968.29,1894.504,968.29z"
         />
         <path
-            style="fill:#A44B74;"
+            style="fill:{bowColors.darker2};"
             d="M946.755,989.03c1.539-7.887,3.033-15.944,4.434-23.784c-12.596-3.092-23.658-7.751-31.359-14.663
 		c-1.163-1.043-2.249-2.137-3.253-3.283c-0.755-0.862-1.37-1.926-2.026-2.93c-0.094-0.144-0.199-0.274-0.291-0.421
 		c-5.212,7.768-10.705,15.286-16.467,22.533c-25.068,31.523-54.867,58.193-85.345,80.626c-5.122,3.771-10.264,7.423-15.406,10.958
@@ -132,7 +278,7 @@
 		c0,0.001,0,0.001,0,0.001c5.865-14.5,10.674-27.885,14.652-40.186C943.734,999.23,945.312,994.033,946.755,989.03z"
         />
         <path
-            style="fill:#A44B74;"
+            style="fill:{bowColors.darker2};"
             d="M1196.183,1038.414c18.191,2.512,51.328,39.436,51.328,39.436
 		c41.493,78.836,275.926,352.686,304.97,352.118c29.045-0.569,26.97-45.073-54.476-113.536
 		c-81.445-68.462-217.269-221.985-217.269-221.985c52.908,31.374,92.174,48.321,119.212,57.502
@@ -143,7 +289,7 @@
 		C1187.625,1039.444,1191.394,1037.754,1196.183,1038.414z"
         />
         <path
-            style="fill:#B04576;"
+            style="fill:{bowColors.darker3};"
             d="M1894.504,968.29c-0.468-6.319-1.085-12.806-1.801-19.392c-9.802,15.693-10.499,55.324-5.574,80.94
 		c6.916,35.96,17.626,88.745-37.343,106.497c-54.969,17.751-362.817-38.33-409.392-55.323
 		c-102.348-37.343-182.568-110.348-196.398-147.99c-6.109-16.625-26.827-96.746,5.532-105.114
@@ -184,33 +330,33 @@
 		 M913.29,942.547c-0.117-0.213-0.194-0.482-0.308-0.7C913.096,942.065,913.173,942.334,913.29,942.547z"
         />
         <path
-            style="fill:#E887AF;"
+            style="fill:{bowColors.lighter};"
             d="M403.481,471.073c45.642,12.448,183.95,37.343,240.657,59.472
 		c56.706,22.129,103.731,76.07,127.244,80.219c23.512,4.149-59.473-78.836-99.582-113.412
 		c-40.11-34.578-183.95-96.816-224.06-123.095c-40.109-26.279-53.94-20.746-53.94-20.746c-27.358-5.87-51.174,1.383-55.323,42.876
 		C334.326,437.878,357.839,458.625,403.481,471.073z"
         />
         <path
-            style="fill:#E887AF;"
+            style="fill:{bowColors.lighter};"
             d="M456.038,833.44c47.025,2.766,165.97-30.428,233.741-45.642
 		c67.772-15.214,148.983-38.985,127.244-62.239c0,0-76.07-8.299-147.99,0c-71.92,8.298-195.015-11.065-230.976,0
 		c-35.959,11.065-59.472,37.343-49.79,60.855C397.949,809.928,409.013,830.674,456.038,833.44z"
         />
         <path
-            style="fill:#E887AF;"
+            style="fill:{bowColors.lighter};"
             d="M1736.373,353.51c0,0-13.831-5.532-53.939,20.746c-40.11,26.279-183.95,88.517-224.059,123.095
 		c-40.11,34.577-123.094,117.562-99.583,113.412c23.512-4.149,70.537-58.089,127.244-80.219
 		c56.706-22.13,195.016-47.025,240.657-59.472c45.642-12.448,69.154-33.195,65.005-74.687
 		C1787.547,354.893,1763.732,347.64,1736.373,353.51z"
         />
         <path
-            style="fill:#E887AF;"
+            style="fill:{bowColors.lighter};"
             d="M1692.115,725.56c-35.96-11.065-159.055,8.298-230.975,0c-71.92-8.299-147.99,0-147.99,0
 		c-21.739,23.253,59.472,47.025,127.244,62.239c67.771,15.214,186.716,48.408,233.741,45.642
 		c47.025-2.766,58.089-23.512,67.771-47.025C1751.588,762.903,1728.076,736.625,1692.115,725.56z"
         />
         <path
-            style="fill:#E887AF;"
+            style="fill:{bowColors.lighter};"
             d="M972.565,610.914c23.859,10.915,57.053-28.503,92.321-29.54
 		c35.269-1.037,66.388,30.082,89.208,24.895c22.822-5.187,37.983-29.442,19.542-49.15c-18.441-19.709-116.01-11.014-116.01-11.014
 		s-74.687-7.261-90.247,10.373C951.819,574.112,948.707,599.999,972.565,610.914z"

@@ -19,6 +19,8 @@
      * @prop {number} startVelocity - Initial velocity of particles (default: 30)
      * @prop {number} ticks - Number of animation frames (default: 60)
      */
+    import { getThemeColors } from '@/lib/colors';
+
     interface Props {
         /** When set to true, triggers the confetti animation */
         trigger?: boolean;
@@ -34,17 +36,42 @@
         startVelocity?: number;
         /** Number of animation frames */
         ticks?: number;
+        /** Theme color to generate confetti colors from */
+        themeColor?: string;
+        /** Secondary color for dual themes */
+        secondaryColor?: string | null;
     }
 
     let {
         trigger = $bindable(false),
-        colors = ['#ec4899', '#f472b6', '#fb7185', '#f9a8d4', '#fce7f3'],
+        colors,
         duration = 3000,
         particleCount = 50,
         spread = 360,
         startVelocity = 30,
         ticks = 60,
+        themeColor = '#ec4899',
+        secondaryColor = null,
     }: Props = $props();
+
+    // Generate colors from theme if not provided
+    const confettiColors = $derived(() => {
+        if (colors && colors.length > 0) {
+            return colors;
+        }
+        const themeColors = getThemeColors(themeColor, secondaryColor);
+        const colorArray = [themeColors.base, themeColors.medium, themeColors.lighter, themeColors.light, themeColors.dark];
+        if (secondaryColor && themeColors.secondary) {
+            colorArray.push(themeColors.secondary);
+            if ((themeColors as any).secondaryLight) {
+                colorArray.push((themeColors as any).secondaryLight);
+            }
+            if ((themeColors as any).secondaryDark) {
+                colorArray.push((themeColors as any).secondaryDark);
+            }
+        }
+        return colorArray;
+    });
 
     function fireConfetti() {
         const animationEnd = Date.now() + duration;
@@ -53,7 +80,7 @@
             spread,
             ticks,
             zIndex: 9999,
-            colors: colors,
+            colors: confettiColors(),
         };
 
         function randomInRange(min: number, max: number) {

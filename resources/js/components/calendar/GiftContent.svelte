@@ -1,4 +1,6 @@
 <script lang="ts">
+    import { getThemeColors } from '@/lib/colors';
+
     interface Gift {
         gift_type: 'text' | 'image_text' | 'product';
         title: string | null;
@@ -9,14 +11,17 @@
 
     interface Props {
         gift: Gift;
+        themeColor?: string;
     }
 
-    let { gift }: Props = $props();
+    let { gift, themeColor = '#ec4899' }: Props = $props();
+
+    const themeColors = $derived(getThemeColors(themeColor));
 </script>
 
 <div class="gift-content">
     {#if gift.title}
-        <h3 class="mb-4 text-2xl font-bold text-pink-700">{gift.title}</h3>
+        <h3 class="mb-4 text-2xl font-bold" style="color: {themeColors.darker};">{gift.title}</h3>
     {/if}
 
     {#if gift.gift_type === 'text'}
@@ -25,9 +30,14 @@
                 <p class="whitespace-pre-wrap text-gray-700">{gift.content_text}</p>
             </div>
             {#if gift.product_code}
-                <div class="rounded-lg bg-pink-50 border-2 border-pink-300 p-4">
+                <div
+                    class="rounded-lg border-2 p-4"
+                    style="background-color: {themeColors.light}; border-color: {themeColors.medium};"
+                >
                     <p class="text-sm font-medium text-gray-600 mb-1">Coupon Code:</p>
-                    <p class="text-2xl font-bold text-pink-700 tracking-wider font-mono">{gift.product_code}</p>
+                    <p class="text-2xl font-bold tracking-wider font-mono" style="color: {themeColors.darker};">
+                        {gift.product_code}
+                    </p>
                 </div>
             {/if}
         </div>
@@ -47,14 +57,22 @@
                 </div>
             {/if}
             {#if gift.product_code}
-                <div class="rounded-lg bg-pink-50 border-2 border-pink-300 p-4">
+                <div
+                    class="rounded-lg border-2 p-4"
+                    style="background-color: {themeColors.light}; border-color: {themeColors.medium};"
+                >
                     <p class="text-sm font-medium text-gray-600 mb-1">Coupon Code:</p>
-                    <p class="text-2xl font-bold text-pink-700 tracking-wider font-mono">{gift.product_code}</p>
+                    <p class="text-2xl font-bold tracking-wider font-mono" style="color: {themeColors.darker};">
+                        {gift.product_code}
+                    </p>
                 </div>
             {/if}
         </div>
     {:else if gift.gift_type === 'product'}
-        <div class="rounded-lg border-2 border-pink-200 bg-pink-50 p-6">
+        <div
+            class="rounded-lg border-2 p-6"
+            style="background-color: {themeColors.light}; border-color: {themeColors.lighter};"
+        >
             <div class="space-y-4">
                 {#if gift.content_image_path}
                     <div class="flex items-center justify-center">
@@ -68,10 +86,11 @@
                 {:else}
                     <div class="mb-4 flex items-center justify-center">
                         <svg
-                            class="h-20 w-20 text-pink-500"
+                            class="h-20 w-20"
                             fill="none"
                             stroke="currentColor"
                             viewBox="0 0 24 24"
+                            style="color: {themeColors.base};"
                         >
                             <path
                                 stroke-linecap="round"
@@ -83,11 +102,16 @@
                     </div>
                 {/if}
                 <div class="text-center space-y-4">
-                    <h4 class="text-xl font-semibold text-pink-700">Redeemable Gift</h4>
+                    <h4 class="text-xl font-semibold" style="color: {themeColors.darker};">Redeemable Gift</h4>
                     {#if gift.product_code}
-                        <div class="rounded-lg bg-white border-2 border-pink-300 p-4">
+                        <div
+                            class="rounded-lg bg-white border-2 p-4"
+                            style="border-color: {themeColors.medium};"
+                        >
                             <p class="text-sm font-medium text-gray-600 mb-1">Your Code:</p>
-                            <p class="text-2xl font-bold text-pink-700 tracking-wider font-mono">{gift.product_code}</p>
+                            <p class="text-2xl font-bold tracking-wider font-mono" style="color: {themeColors.darker};">
+                                {gift.product_code}
+                            </p>
                         </div>
                     {/if}
                     {#if gift.content_text}

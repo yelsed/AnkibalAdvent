@@ -76,7 +76,7 @@ return [
     'product_days' => 'Productdagen',
     'days_to_setup' => 'Dagen om In te Stellen',
     'calendar_music' => 'Kalender Muziek',
-    'note' => 'Opmerking',
+    'note' => 'Let op!',
     'days_only_unlock_december' => 'Dagen kunnen alleen in december worden ontgrendeld!',
     'can_unlock_days' => 'Je kunt nu dagen 1-:day ontgrendelen! 🎅',
     'debug_mode' => 'Debug Modus',

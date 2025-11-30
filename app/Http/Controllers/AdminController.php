@@ -60,6 +60,9 @@ class AdminController extends Controller
             'description' => $request->description,
             'theme_color' => $request->theme_color ?? '#ec4899',
             'audio_url' => $request->audio_url,
+            'theme_type' => $request->theme_type ?? 'single',
+            'secondary_color' => $request->secondary_color,
+            'seasonal_config' => $request->seasonal_config,
         ]);
 
         // Create all 31 days for the calendar

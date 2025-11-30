@@ -27,6 +27,9 @@ class StoreCalendarRequest extends FormRequest
             'description' => ['nullable', 'string', 'max:1000'],
             'theme_color' => ['nullable', 'string', 'regex:/^#[0-9A-Fa-f]{6}$/'],
             'audio_url' => ['nullable', 'url', 'max:2048'],
+            'theme_type' => ['required', 'in:single,dual,seasonal'],
+            'secondary_color' => ['nullable', 'required_if:theme_type,dual', 'regex:/^#[0-9A-Fa-f]{6}$/'],
+            'seasonal_config' => ['nullable', 'required_if:theme_type,seasonal', 'array'],
         ];
 
         // Admins can specify user_id OR email (for new users)
