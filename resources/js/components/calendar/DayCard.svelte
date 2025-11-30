@@ -1,5 +1,6 @@
 <script lang="ts">
     import Bow from './Bow.svelte';
+    import { getThemeColors } from '@/lib/colors';
 
     interface CalendarDay {
         id: number;
@@ -12,9 +13,13 @@
         onclick?: () => void;
         canUnlock?: boolean;
         countdown?: string | null;
+        themeColor?: string;
+        secondaryColor?: string | null;
     }
 
-    let { day, onclick, canUnlock = false, countdown = null }: Props = $props();
+    let { day, onclick, canUnlock = false, countdown = null, themeColor = '#ec4899', secondaryColor = null }: Props = $props();
+
+    const themeColors = $derived(getThemeColors(themeColor, secondaryColor));
 
     const isUnlocked = $derived(day.unlocked_at !== null);
 
@@ -239,6 +244,19 @@
         `perspective(${PERSPECTIVE}px) rotateX(${finalRotateX}deg) rotateY(${finalRotateY}deg)`
     );
 
+    // Set CSS custom properties for theme colors
+    $effect(() => {
+        if (cardElement) {
+            const rgb = themeColors.withOpacity;
+            cardElement.style.setProperty('--theme-shadow-1', rgb['30']);
+            cardElement.style.setProperty('--theme-shadow-2', rgb['20']);
+            cardElement.style.setProperty('--theme-shadow-3', rgb['10']);
+            cardElement.style.setProperty('--theme-shadow-4', rgb['30']);
+            cardElement.style.setProperty('--theme-shadow-5', rgb['30']);
+            cardElement.style.setProperty('--theme-shadow-6', rgb['20']);
+        }
+    });
+
     // Simple click handler - touch-action: manipulation allows normal clicks
     function handleClick() {
         if (onclick) {
@@ -276,13 +294,16 @@
         class:tilted={isTilted && (isUnlocked || canUnlock)}
     >
         <!-- Decorative bow at the top - inside button so it moves with tilt -->
-        <div class="absolute left-1/2 top-0 z-30 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
-            <Bow width={60} height={60} class="drop-shadow-lg" />
+        <div class="absolute left-1/2 top-2 z-30 -translate-x-1/2 -translate-y-1/2 pointer-events-none">
+            <Bow width={60} height={60} class="drop-shadow-lg" themeColor={themeColor} secondaryColor={secondaryColor} />
         </div>
 
     {#if isUnlocked}
-        <!-- Unlocked state with gradient background -->
-        <div class="absolute inset-0 bg-gradient-to-br from-pink-400 to-pink-600 rounded-xl"></div>
+        <!-- Unlocked state with solid background (no gradient) -->
+        <div
+            class="absolute inset-0 rounded-xl"
+            style="background-color: {themeColors.medium}; opacity: 0.9;"
+        ></div>
         <div class="relative z-10 flex flex-col items-center gap-2 text-white">
             <span class="text-5xl font-bold">{day.day_number}</span>
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -300,29 +321,37 @@
             class="absolute inset-0 rounded-xl"
             style="background-image: repeating-linear-gradient(
                 45deg,
-                #fce7f3 0px,
-                #fce7f3 10px,
-                #fbcfe8 10px,
-                #fbcfe8 20px
-            );"
+                {themeColors.light} 0px,
+                {themeColors.light} 10px,
+                {themeColors.lighter} 10px,
+                {themeColors.lighter} 20px
+            ); opacity: 0.9;"
         ></div>
 
-        <!-- Ribbon effect -->
+        <!-- Ribbon effect - use secondary color for accents if available -->
         <div class="absolute inset-0 rounded-xl overflow-hidden">
-            <div class="absolute left-1/2 top-0 h-full w-4 -translate-x-1/2 bg-pink-400 opacity-80"></div>
-            <div class="absolute left-0 top-1/2 h-4 w-full -translate-y-1/2 bg-pink-400 opacity-80"></div>
+            <div
+                class="absolute left-1/2 top-0 h-full w-4 -translate-x-1/2 opacity-80"
+                style="background-color: {secondaryColor ? (themeColors as any).secondaryDark || secondaryColor : themeColors.medium};"
+            ></div>
+            <div
+                class="absolute left-0 top-1/2 h-4 w-full -translate-y-1/2 opacity-80"
+                style="background-color: {secondaryColor ? (themeColors as any).secondaryDark || secondaryColor : themeColors.medium};"
+            ></div>
         </div>
 
         <div class="relative z-10 flex flex-col items-center gap-2">
-            <span class="text-5xl font-bold text-pink-600">{day.day_number}</span>
+            <span class="text-5xl font-bold" style="color: {themeColors.dark};">{day.day_number}</span>
             {#if canUnlock}
-                <span class="text-xs font-medium text-pink-600">Tap to open</span>
+                <span class="text-xs font-medium" style="color: {themeColors.dark};">Tap to open</span>
             {:else if countdown}
                 <div class="flex flex-col items-center gap-0.5">
-                    <span class="text-xs font-medium text-pink-600 font-mono leading-tight">{countdown}</span>
+                    <span class="text-xs font-medium font-mono leading-tight" style="color: {themeColors.dark};">
+                        {countdown}
+                    </span>
                 </div>
             {:else}
-                <svg class="h-6 w-6 text-pink-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: {themeColors.dark};">
                     <path
                         stroke-linecap="round"
                         stroke-linejoin="round"
@@ -357,16 +386,16 @@
     }
 
     button.tilt-enabled:not(:disabled):hover {
-        box-shadow: 0 20px 25px -5px rgba(236, 72, 153, 0.3),
-            0 10px 10px -5px rgba(236, 72, 153, 0.2),
-            0 0 0 1px rgba(236, 72, 153, 0.1);
+        box-shadow: 0 20px 25px -5px var(--theme-shadow-1),
+            0 10px 10px -5px var(--theme-shadow-2),
+            0 0 0 1px var(--theme-shadow-3);
     }
 
     /* Enhanced glow effect when tilted */
     button.tilt-enabled.tilted:not(:disabled) {
-        box-shadow: 0 25px 30px -5px rgba(236, 72, 153, 0.4),
-            0 15px 15px -5px rgba(236, 72, 153, 0.3),
-            0 0 20px rgba(236, 72, 153, 0.2);
+        box-shadow: 0 25px 30px -5px var(--theme-shadow-4),
+            0 15px 15px -5px var(--theme-shadow-5),
+            0 0 20px var(--theme-shadow-6);
     }
 
     /* Smooth transition for box-shadow only */

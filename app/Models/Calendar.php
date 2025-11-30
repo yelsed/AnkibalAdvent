@@ -19,12 +19,16 @@ class Calendar extends Model
         'description',
         'theme_color',
         'audio_url',
+        'theme_type',
+        'secondary_color',
+        'seasonal_config',
     ];
 
     protected function casts(): array
     {
         return [
             'year' => 'integer',
+            'seasonal_config' => 'array',
         ];
     }
 

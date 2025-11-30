@@ -61,7 +61,7 @@ return [
     'verify_email' => 'E-mail verifiëren',
     'resend_verification' => 'Verificatie opnieuw versturen',
     'days' => 'dagen',
-    'hours' => 'uren',
+    'hours' => 'uur',
     'minutes' => 'min',
     'seconds' => 'sec',
     'platform' => 'Platform',

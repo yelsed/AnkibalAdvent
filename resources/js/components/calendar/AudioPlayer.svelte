@@ -1,6 +1,7 @@
 <script lang="ts">
     import { Pause, Play } from 'lucide-svelte';
     import { page } from '@inertiajs/svelte';
+    import { getThemeColors } from '@/lib/colors';
     import { t, initTranslations } from '@/lib/translations';
 
     // Initialize translations immediately from page props
@@ -14,11 +15,14 @@
         autoplay?: boolean;
         loop?: boolean;
         class?: string;
+        themeColor?: string;
     }
 
-    let { audioUrl, autoplay = false, loop = false, class: className = '' }: Props = $props();
+    let { audioUrl, autoplay = false, loop = false, class: className = '', themeColor = '#ec4899' }: Props = $props();
 
-    let audioElement: HTMLAudioElement;
+    const themeColors = $derived(getThemeColors(themeColor));
+
+    let audioElement: HTMLAudioElement | undefined;
     let isPlaying = $state(false);
     let isLoading = $state(false);
     let error = $state<string | null>(null);
@@ -87,13 +91,21 @@
                 togglePlay();
             }
         }}
-        class="flex cursor-pointer items-center gap-3 rounded-lg border border-pink-200 bg-pink-50 p-3 transition-colors hover:bg-pink-100 {className}"
+        class="flex cursor-pointer items-center gap-3 rounded-lg border p-3 transition-colors {className}"
+        style="border-color: {themeColors.lighter}; background-color: {themeColors.light};"
+        onmouseenter={(e) => {
+            e.currentTarget.style.backgroundColor = themeColors.lighter;
+        }}
+        onmouseleave={(e) => {
+            e.currentTarget.style.backgroundColor = themeColors.light;
+        }}
         class:opacity-50={isLoading || !!error}
         class:cursor-not-allowed={isLoading || !!error}
         aria-label={isPlaying ? t('common.pause') : t('common.play')}
     >
         <div
-            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-pink-500 text-white transition-colors"
+            class="flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white transition-colors"
+            style="background-color: {themeColors.base};"
         >
             {#if isLoading}
                 <div class="h-6 w-6 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
@@ -108,7 +120,7 @@
             {#if error}
                 <p class="text-sm text-red-600">{error}</p>
             {:else}
-                <p class="text-lg font-medium text-pink-700">{t('common.audio')}</p>
+                <p class="text-lg font-medium" style="color: {themeColors.darker};">{t('common.audio')}</p>
             {/if}
         </div>
 

@@ -55,7 +55,7 @@
     let selectedDayIndex = $state(0);
     let selectedDay = $derived(calendar?.days?.[selectedDayIndex]);
     let currentGiftType = $state<string>('text');
-    let giftTypeHiddenInput: HTMLInputElement;
+    let giftTypeHiddenInput: HTMLInputElement | undefined;
     let audioSourceType = $state<'none' | 'library' | 'url'>('none');
     let selectedAudioFileId = $state<number | null>(null);
     let audioUrlInput = $state('');

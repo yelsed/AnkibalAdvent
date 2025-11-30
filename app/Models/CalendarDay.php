@@ -22,6 +22,7 @@ class CalendarDay extends Model
         'audio_url',
         'audio_file_id',
         'unlocked_at',
+        'theme_override',
     ];
 
     protected function casts(): array
@@ -29,6 +30,7 @@ class CalendarDay extends Model
         return [
             'day_number' => 'integer',
             'unlocked_at' => 'datetime',
+            'theme_override' => 'array',
         ];
     }
 
