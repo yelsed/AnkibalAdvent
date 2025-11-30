@@ -22,7 +22,7 @@
 
     const themeColors = $derived(getThemeColors(themeColor));
 
-    let audioElement: HTMLAudioElement | undefined;
+    let audioElement: HTMLAudioElement;
     let isPlaying = $state(false);
     let isLoading = $state(false);
     let error = $state<string | null>(null);

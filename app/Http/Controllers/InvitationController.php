@@ -3,16 +3,21 @@
 namespace App\Http\Controllers;
 
 use App\Http\Requests\AcceptInvitationRequest;
+use App\Http\Requests\InviteRecipientRequest;
+use App\Models\Calendar;
 use App\Models\Invitation;
 use App\Models\User;
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Notification;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class InvitationController extends Controller
 {
+    use AuthorizesRequests;
     /**
      * Show the invitation acceptance page.
      */
@@ -83,10 +88,10 @@ class InvitationController extends Controller
             'accepted_at' => now(),
         ]);
 
-        // If calendar exists but not linked, link it
-        if ($invitation->calendar_id && !$invitation->calendar->user_id) {
+        // If calendar exists, set recipient_id
+        if ($invitation->calendar_id) {
             $invitation->calendar->update([
-                'user_id' => $user->id,
+                'recipient_id' => $user->id,
             ]);
         }
 
@@ -94,5 +99,28 @@ class InvitationController extends Controller
 
         return redirect()->route('calendars.index')
             ->with('success', 'Welkom! Je account is aangemaakt.');
+    }
+
+    /**
+     * Invite a recipient to a calendar.
+     */
+    public function inviteRecipient(InviteRecipientRequest $request, Calendar $calendar): RedirectResponse
+    {
+        $validated = $request->validated();
+
+        // Create invitation
+        $invitation = Invitation::create([
+            'email' => $validated['email'],
+            'token' => Invitation::generateToken(),
+            'calendar_id' => $calendar->id,
+            'expires_at' => now()->addDays(7),
+        ]);
+
+        // Send notification
+        Notification::route('mail', $validated['email'])
+            ->notify(new \App\Notifications\InvitationNotification($invitation));
+
+        return redirect()->back()
+            ->with('success', __('calendar.invitation_sent', ['email' => $validated['email']]));
     }
 }

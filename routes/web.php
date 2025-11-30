@@ -40,6 +40,10 @@ Route::middleware(['auth'])->group(function () {
     Route::post('calendar-days/{calendarDay}/unlock', [CalendarDayController::class, 'unlock'])
         ->name('calendar-days.unlock');
 
+    // Invite recipient to calendar (owners only)
+    Route::post('calendars/{calendar}/invite-recipient', [InvitationController::class, 'inviteRecipient'])
+        ->name('calendars.invite-recipient');
+
     // Admin routes
     Route::middleware('can:admin')->group(function () {
         Route::get('admin/calendars', [AdminController::class, 'index'])

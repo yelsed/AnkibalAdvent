@@ -33,7 +33,9 @@
         theme_color: string;
         audio_url: string | null;
         created_at: string;
-        user: User;
+        owner: User;
+        recipient?: User;
+        user?: User; // backward compatibility
     }
 
     interface Props {
@@ -50,15 +52,18 @@
     let secondaryColor = $state('#fbbf24');
     let seasonalTheme = $state('kerst');
 
-    // Reset form when dialog opens
+    // Reset form when dialog opens - prevent infinite loops by tracking previous state
+    let previousDialogState = $state(false);
     $effect(() => {
-        if (showCreateDialog) {
+        // Only reset when dialog changes from closed to open
+        if (showCreateDialog && !previousDialogState) {
             formKey++;
             inviteNewUser = false;
             themeType = 'single';
             secondaryColor = '#fbbf24';
             seasonalTheme = 'kerst';
         }
+        previousDialogState = showCreateDialog;
     });
 
     // Breadcrumbs - must be defined after translations are initialized
@@ -452,8 +457,13 @@
                                         <td class="px-4 py-3 text-gray-600">{calendar.year}</td>
                                         <td class="px-4 py-3">
                                             <div>
-                                                <div class="font-medium text-gray-900">{calendar.user.name}</div>
-                                                <div class="text-sm text-gray-500">{calendar.user.email}</div>
+                                                {#if calendar.owner}
+                                                    <div class="font-medium text-gray-900">{calendar.owner.name}</div>
+                                                    <div class="text-sm text-gray-500">{calendar.owner.email}</div>
+                                                {:else if calendar.user}
+                                                    <div class="font-medium text-gray-900">{calendar.user.name}</div>
+                                                    <div class="text-sm text-gray-500">{calendar.user.email}</div>
+                                                {/if}
                                             </div>
                                         </td>
                                         <td class="px-4 py-3 text-sm text-gray-500">

@@ -99,4 +99,13 @@ return [
     'no_content_yet' => 'Nog geen inhoud...',
     'no_description_yet' => 'Nog geen beschrijving...',
     'code' => 'Code',
+    'invite_recipient' => 'Ontvanger Uitnodigen',
+    'invite_recipient_description' => 'Nodig iemand uit om deze kalender te bekijken en de dagen te openen.',
+    'recipient_email' => 'E-mailadres Ontvanger',
+    'recipient_email_placeholder' => 'ontvanger@example.com',
+    'send_invitation' => 'Uitnodiging Versturen',
+    'invitation_sent' => 'Uitnodiging verstuurd naar :email',
+    'recipient' => 'Ontvanger',
+    'no_recipient_yet' => 'Nog geen ontvanger uitgenodigd',
+    'invited_recipient' => 'Uitgenodigde ontvanger: :email',
 ];

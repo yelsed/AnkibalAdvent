@@ -24,6 +24,7 @@ return [
     'processing' => 'Verwerken...',
     'saving' => 'Opslaan...',
     'creating' => 'Aanmaken...',
+    'sending' => 'Verzenden...',
     'yes' => 'Ja',
     'no' => 'Nee',
     'optional' => 'Optioneel',

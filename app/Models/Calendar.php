@@ -13,7 +13,8 @@ class Calendar extends Model
     use HasFactory;
 
     protected $fillable = [
-        'user_id',
+        'owner_id',
+        'recipient_id',
         'title',
         'year',
         'description',
@@ -32,9 +33,22 @@ class Calendar extends Model
         ];
     }
 
+    public function owner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'owner_id');
+    }
+
+    public function recipient(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'recipient_id');
+    }
+
+    /**
+     * Backward compatibility: user() returns owner()
+     */
     public function user(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->owner();
     }
 
     public function days(): HasMany

@@ -1,11 +1,14 @@
 <script lang="ts">
-    import { router, page } from '@inertiajs/svelte';
+    import { router, page, Form } from '@inertiajs/svelte';
     import axios from 'axios';
     import AppLayout from '@/layouts/AppLayout.svelte';
     import DayCard from '@/components/calendar/DayCard.svelte';
     import DayModal from '@/components/calendar/DayModal.svelte';
     import AudioPlayer from '@/components/calendar/AudioPlayer.svelte';
     import { Button } from '@/components/ui/button';
+    import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+    import { Input } from '@/components/ui/input';
+    import { Label } from '@/components/ui/label';
     import { toast } from 'svelte-sonner';
     import { getCountdownString, getNextDayForCountdown } from '@/lib/countdown';
     import { getThemeColors } from '@/lib/colors';
@@ -70,7 +73,9 @@
         secondary_color?: string | null;
         seasonal_config?: any;
         days: CalendarDay[];
-        user?: User;
+        owner?: User;
+        recipient?: User;
+        user?: User; // backward compatibility
     }
 
     interface Props {
@@ -78,9 +83,10 @@
         canManage: boolean;
         isAdmin: boolean;
         isOwner: boolean;
+        isRecipient?: boolean;
     }
 
-    let { calendar: initialCalendar, canManage, isAdmin, isOwner }: Props = $props();
+    let { calendar: initialCalendar, canManage, isAdmin, isOwner, isRecipient = false }: Props = $props();
 
     // Convert calendar prop to state so we can mutate it reactively
     let calendar = $state(initialCalendar);
@@ -101,6 +107,7 @@
     let modalOpen = $state(false);
     let justUnlocked = $state(false);
     let currentTime = $state(new Date());
+    let inviteDialogOpen = $state(false);
 
     // Check if debug mode is enabled from server config
     const calendarDebugEnabled = $derived(($page.props as any)?.calendarDebugEnabled ?? false);
@@ -277,8 +284,9 @@
                     <div class="flex-1">
                         <p class="font-semibold text-blue-900">{t('calendar.admin_view')}</p>
                         <p class="text-sm text-blue-700">
-                            {#if calendar.user}
-                                {t('calendar.viewing_calendar_owned_by', { name: calendar.user.name, email: calendar.user.email })}
+                            {#if calendar.owner || calendar.user}
+                                {@const owner = calendar.owner || calendar.user}
+                                {t('calendar.viewing_calendar_owned_by', { name: owner.name, email: owner.email })}
                             {:else}
                                 {t('calendar.viewing_calendar')}
                             {/if}
@@ -314,8 +322,9 @@
                 {/if}
                 <div class="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
                     <span>{t('common.year')}: {calendar.year}</span>
-                    {#if isAdmin && calendar.user}
-                        <span>• {t('calendar.creator')}: {calendar.user.name}</span>
+                    {#if isAdmin && (calendar.owner || calendar.user)}
+                        {@const owner = calendar.owner || calendar.user}
+                        <span>• {t('calendar.creator')}: {owner.name}</span>
                     {/if}
                 </div>
             </div>
@@ -369,6 +378,102 @@
                 {/if}
             </div>
         </div>
+
+        <!-- Recipient Information & Invite Section -->
+        {#if isOwner}
+            <div
+                class="rounded-lg border p-6"
+                style="border-color: {themeColors.lighter}; background-color: {themeColors.light};"
+            >
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                        <h3 class="text-lg font-semibold" style="color: {themeColors.darker};">
+                            {t('calendar.recipient')}
+                        </h3>
+                        {#if calendar.recipient}
+                            <p class="mt-1 text-sm text-gray-600">
+                                {t('calendar.invited_recipient', { email: calendar.recipient.email })}
+                            </p>
+                        {:else}
+                            <p class="mt-1 text-sm text-gray-600">
+                                {t('calendar.no_recipient_yet')}
+                            </p>
+                        {/if}
+                    </div>
+                    <Dialog bind:open={inviteDialogOpen}>
+                        <DialogTrigger>
+                            <Button
+                                style="background-color: {themeColors.dark}; color: white;"
+                                class="hover:opacity-90"
+                            >
+                                <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                        stroke-width="2"
+                                        d="M12 4v16m8-8H4"
+                                    />
+                                </svg>
+                                {t('calendar.invite_recipient')}
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent>
+                            {#snippet children()}
+                                <DialogHeader>
+                                    <DialogTitle>{t('calendar.invite_recipient')}</DialogTitle>
+                                    <DialogDescription>
+                                        {t('calendar.invite_recipient_description')}
+                                    </DialogDescription>
+                                </DialogHeader>
+                                <Form
+                                    action={`/calendars/${calendar.id}/invite-recipient`}
+                                    method="post"
+                                    onSuccess={() => {
+                                        inviteDialogOpen = false;
+                                        router.reload();
+                                    }}
+                                >
+                                    {#snippet children({ errors, processing }: { errors: Record<string, string>; processing: boolean })}
+                                        <div class="space-y-4">
+                                            <div>
+                                                <Label for="email">{t('calendar.recipient_email')}</Label>
+                                                <Input
+                                                    id="email"
+                                                    name="email"
+                                                    type="email"
+                                                    placeholder={t('calendar.recipient_email_placeholder')}
+                                                    required
+                                                />
+                                                {#if errors.email}
+                                                    <p class="mt-1 text-sm text-red-600">{errors.email}</p>
+                                                {/if}
+                                            </div>
+                                            <div class="flex justify-end gap-2 pt-4">
+                                                <Button
+                                                    type="button"
+                                                    variant="outline"
+                                                    onclick={() => (inviteDialogOpen = false)}
+                                                >
+                                                    {t('common.cancel')}
+                                                </Button>
+                                                <Button
+                                                    type="submit"
+                                                    disabled={processing}
+                                                    style="background-color: {themeColors.dark}; color: white;"
+                                                    class="hover:opacity-90"
+                                                >
+                                                    {processing ? t('common.submit') : t('calendar.send_invitation')}
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    {/snippet}
+                                </Form>
+                            {/snippet}
+                        </DialogContent>
+                    </Dialog>
+                </div>
+            </div>
+        {/if}
 
         <!-- Info Banner -->
         {#if calendarDebugEnabled && debugMode}

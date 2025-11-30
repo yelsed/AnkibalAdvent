@@ -21,7 +21,7 @@ class AdminController extends Controller
     {
         Gate::authorize('admin');
 
-        $calendars = Calendar::with('user')->latest()->get();
+        $calendars = Calendar::with(['owner', 'recipient'])->latest()->get();
 
         return Inertia::render('Admin/Calendars', [
             'calendars' => $calendars,
@@ -54,7 +54,7 @@ class AdminController extends Controller
 
         // Create calendar
         $calendar = Calendar::create([
-            'user_id' => $user->id,
+            'owner_id' => $user->id,
             'title' => $request->title,
             'year' => $request->year,
             'description' => $request->description,
