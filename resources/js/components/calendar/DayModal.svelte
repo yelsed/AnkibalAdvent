@@ -75,7 +75,7 @@
                                 {t('calendar.day_number', { number: day.day_number })}
                             </h2>
                             <div class="rounded-full px-4 py-2" style="background-color: {themeColors.light};">
-                                <span class="text-sm font-medium" style="color: {themeColors.darker};">
+                                <span class="text-sm font-medium font-serif" style="color: {themeColors.darker};">
                                     {new Date(day.unlocked_at!).toLocaleDateString()}
                                 </span>
                             </div>
@@ -96,7 +96,7 @@
                 <button
                     type="button"
                     onclick={() => (open = false)}
-                    class="w-full rounded-lg px-4 py-3 font-semibold text-white transition-colors"
+                    class="w-full rounded-lg px-4 py-3 font-semibold text-white transition-colors font-serif"
                     style="background-color: {themeColors.base};"
                     onmouseenter={(e) => {
                         e.currentTarget.style.backgroundColor = themeColors.dark;

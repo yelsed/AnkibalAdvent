@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Petrona:ital,wght@0,100..900;1,100..900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Mountains+of+Christmas:wght@400;700&display=swap');
 @import 'tailwindcss';
 @import 'tw-animate-css';
 
@@ -8,6 +10,8 @@
 
 @theme inline {
     --font-sans: Instrument Sans, ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji', 'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-serif: "Petrona", serif;
+    --font-display: "Mountains of Christmas", serif;
 
     --radius-lg: var(--radius);
     --radius-md: calc(var(--radius) - 2px);
@@ -164,5 +168,22 @@
     }
     body {
         @apply bg-background text-foreground;
+        font-family: var(--font-serif);
+    }
+    /* Apply Mountains of Christmas font to large headings */
+    h1, h2 {
+        font-family: var(--font-display);
+    }
+    /* Apply Petrona font to other text elements */
+    h3, h4, h5, h6, p, label, button, a, li, td, th {
+        font-family: var(--font-serif);
+    }
+    /* Keep monospace for code elements */
+    code, pre, .font-mono {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    }
+    /* Utility class for display font (Mountains of Christmas) */
+    .font-display {
+        font-family: var(--font-display);
     }
 }

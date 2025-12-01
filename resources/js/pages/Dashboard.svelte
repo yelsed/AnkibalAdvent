@@ -29,7 +29,7 @@
         <!-- Welcome Hero -->
         <div class="rounded-lg bg-gradient-to-r from-pink-500 to-pink-600 p-8 text-white">
             <h1 class="mb-2 text-3xl font-bold">{t('dashboard.welcome')}</h1>
-            <p class="mb-4 text-pink-100">{t('dashboard.welcome_description')}</p>
+            <p class="mb-4 text-pink-100 font-serif">{t('dashboard.welcome_description')}</p>
             <Button
                 onclick={() => router.visit('/calendars')}
                 class="bg-white text-pink-600 hover:bg-pink-50"
@@ -47,8 +47,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                         </svg>
                     </div>
-                    <CardTitle>{t('dashboard.my_calendars')}</CardTitle>
-                    <CardDescription>{t('dashboard.view_and_manage')}</CardDescription>
+                    <CardTitle class="font-serif">{t('dashboard.my_calendars')}</CardTitle>
+                    <CardDescription class="font-serif">{t('dashboard.view_and_manage')}</CardDescription>
                 </CardHeader>
             </Card>
 
@@ -59,8 +59,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7" />
                         </svg>
                     </div>
-                    <CardTitle class="text-pink-700">{t('dashboard.days')}</CardTitle>
-                    <CardDescription>{t('dashboard.each_calendar_has_31_days')}</CardDescription>
+                    <CardTitle class="text-pink-700 font-serif">{t('dashboard.days')}</CardTitle>
+                    <CardDescription class="font-serif">{t('dashboard.each_calendar_has_31_days')}</CardDescription>
                 </CardHeader>
             </Card>
 
@@ -71,8 +71,8 @@
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z" />
                         </svg>
                     </div>
-                    <CardTitle class="text-pink-700">{t('dashboard.unlock_in_december')}</CardTitle>
-                    <CardDescription>{t('dashboard.days_unlock_day_by_day')}</CardDescription>
+                    <CardTitle class="text-pink-700 font-serif">{t('dashboard.unlock_in_december')}</CardTitle>
+                    <CardDescription class="font-serif">{t('dashboard.days_unlock_day_by_day')}</CardDescription>
                 </CardHeader>
             </Card>
         </div>
@@ -80,8 +80,8 @@
         <!-- Features -->
         <Card>
             <CardHeader>
-                <CardTitle>{t('dashboard.features')}</CardTitle>
-                <CardDescription>{t('dashboard.what_makes_special')}</CardDescription>
+                <CardTitle class="font-serif">{t('dashboard.features')}</CardTitle>
+                <CardDescription class="font-serif">{t('dashboard.what_makes_special')}</CardDescription>
             </CardHeader>
             <CardContent>
                 <div class="grid gap-4 md:grid-cols-2">
@@ -90,8 +90,8 @@
                             ✨
                         </div>
                         <div>
-                            <h4 class="font-semibold">{t('dashboard.confetti_celebrations')}</h4>
-                            <p class="text-sm text-muted-foreground">{t('dashboard.confetti_description')}</p>
+                            <h4 class="font-semibold font-serif">{t('dashboard.confetti_celebrations')}</h4>
+                            <p class="text-sm text-muted-foreground font-serif">{t('dashboard.confetti_description')}</p>
                         </div>
                     </div>
                     <div class="flex gap-3">
@@ -99,8 +99,8 @@
                             🎁
                         </div>
                         <div>
-                            <h4 class="font-semibold">{t('dashboard.gift_wrap_design')}</h4>
-                            <p class="text-sm text-muted-foreground">{t('dashboard.gift_wrap_description')}</p>
+                            <h4 class="font-semibold font-serif">{t('dashboard.gift_wrap_design')}</h4>
+                            <p class="text-sm text-muted-foreground font-serif">{t('dashboard.gift_wrap_description')}</p>
                         </div>
                     </div>
                     <div class="flex gap-3">
@@ -108,8 +108,8 @@
                             📱
                         </div>
                         <div>
-                            <h4 class="font-semibold">{t('dashboard.mobile_friendly')}</h4>
-                            <p class="text-sm text-muted-foreground">{t('dashboard.mobile_description')}</p>
+                            <h4 class="font-semibold font-serif">{t('dashboard.mobile_friendly')}</h4>
+                            <p class="text-sm text-muted-foreground font-serif">{t('dashboard.mobile_description')}</p>
                         </div>
                     </div>
                     <div class="flex gap-3">
@@ -117,8 +117,8 @@
                             🎨
                         </div>
                         <div>
-                            <h4 class="font-semibold">{t('dashboard.three_gift_types')}</h4>
-                            <p class="text-sm text-muted-foreground">{t('dashboard.three_gift_types_description')}</p>
+                            <h4 class="font-semibold font-serif">{t('dashboard.three_gift_types')}</h4>
+                            <p class="text-sm text-muted-foreground font-serif">{t('dashboard.three_gift_types_description')}</p>
                         </div>
                     </div>
                 </div>

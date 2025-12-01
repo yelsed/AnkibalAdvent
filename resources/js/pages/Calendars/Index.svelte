@@ -66,7 +66,7 @@
         <div class="flex items-center justify-between">
             <div>
                 <h1 class="text-4xl font-bold text-pink-700">🎄 {t('calendar.my_advent_calendars')}</h1>
-                <p class="mt-2 text-gray-600">
+                <p class="mt-2 text-gray-600 font-serif">
                     {isAdmin ? t('calendar.create_and_manage') : t('calendar.view_calendars')}
                 </p>
             </div>
@@ -301,8 +301,8 @@
                             d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
                         />
                     </svg>
-                    <h3 class="mb-2 text-xl font-semibold text-gray-700">{t('calendar.no_calendars_yet')}</h3>
-                    <p class="mb-4 text-gray-500">{t('calendar.create_first_calendar')}</p>
+                    <h3 class="mb-2 text-xl font-semibold text-gray-700 font-serif">{t('calendar.no_calendars_yet')}</h3>
+                    <p class="mb-4 text-gray-500 font-serif">{t('calendar.create_first_calendar')}</p>
                 </CardContent>
             </Card>
         {:else}
@@ -315,23 +315,23 @@
                         onclick={() => router.visit(`/calendars/${calendar.id}`)}
                     >
                         <CardHeader style="background: linear-gradient(135deg, {calendar.theme_color}20, {calendar.theme_color}10);">
-                            <CardTitle class="text-2xl">{calendar.title}</CardTitle>
-                            <CardDescription class="text-base">
+                            <CardTitle class="text-2xl font-serif">{calendar.title}</CardTitle>
+                            <CardDescription class="text-base font-serif">
                                 {calendar.year} • {t('calendar.created')} {new Date(calendar.created_at).toLocaleDateString()}
                             </CardDescription>
                         </CardHeader>
                         <CardContent class="pt-6">
                             {#if calendar.description}
-                                <p class="text-sm text-gray-600">{calendar.description}</p>
+                                <p class="text-sm text-gray-600 font-serif">{calendar.description}</p>
                             {:else}
-                                <p class="text-sm italic text-gray-400">{t('calendar.no_description')}</p>
+                                <p class="text-sm italic text-gray-400 font-serif">{t('calendar.no_description')}</p>
                             {/if}
                             <div class="mt-4 flex items-center gap-2">
                                 <div
                                     class="h-6 w-6 rounded-full border-2 border-gray-200"
                                     style="background-color: {calendar.theme_color}"
                                 ></div>
-                                <span class="text-sm text-gray-500">31 {t('calendar.days')}</span>
+                                <span class="text-sm text-gray-500 font-serif">31 {t('calendar.days')}</span>
                             </div>
                         </CardContent>
                     </Card>

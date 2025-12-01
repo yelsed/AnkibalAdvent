@@ -21,13 +21,13 @@
 
 <div class="gift-content">
     {#if gift.title}
-        <h3 class="mb-4 text-2xl font-bold" style="color: {themeColors.darker};">{gift.title}</h3>
+        <h3 class="mb-4 text-2xl font-bold font-serif" style="color: {themeColors.darker};">{gift.title}</h3>
     {/if}
 
     {#if gift.gift_type === 'text'}
         <div class="space-y-4">
             <div class="prose prose-pink max-w-none">
-                <p class="whitespace-pre-wrap text-gray-700">{gift.content_text}</p>
+                <p class="whitespace-pre-wrap text-gray-700 font-serif">{gift.content_text}</p>
             </div>
             {#if gift.product_code}
                 <div
@@ -47,13 +47,13 @@
                 <img
                     src={`/storage/${gift.content_image_path}`}
                     alt={gift.title || 'Gift image'}
-                    class="h-auto w-full rounded-lg object-cover shadow-lg"
+                    class="h-auto w-full rounded-lg object-cover max-h-128 shadow-lg"
                     loading="eager"
                 />
             {/if}
             {#if gift.content_text}
                 <div class="prose prose-pink max-w-none">
-                    <p class="whitespace-pre-wrap text-gray-700">{gift.content_text}</p>
+                    <p class="whitespace-pre-wrap text-gray-700 font-serif">{gift.content_text}</p>
                 </div>
             {/if}
             {#if gift.product_code}
@@ -102,7 +102,7 @@
                     </div>
                 {/if}
                 <div class="text-center space-y-4">
-                    <h4 class="text-xl font-semibold" style="color: {themeColors.darker};">Redeemable Gift</h4>
+                    <h4 class="text-xl font-semibold font-serif" style="color: {themeColors.darker};">Redeemable Gift</h4>
                     {#if gift.product_code}
                         <div
                             class="rounded-lg bg-white border-2 p-4"
@@ -115,7 +115,7 @@
                         </div>
                     {/if}
                     {#if gift.content_text}
-                        <p class="whitespace-pre-wrap text-gray-700">{gift.content_text}</p>
+                        <p class="whitespace-pre-wrap text-gray-700 font-serif">{gift.content_text}</p>
                     {/if}
                 </div>
             </div>

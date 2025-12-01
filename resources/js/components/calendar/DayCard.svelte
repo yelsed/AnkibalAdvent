@@ -305,7 +305,7 @@
             style="background-color: {themeColors.medium}; opacity: 0.9;"
         ></div>
         <div class="relative z-10 flex flex-col items-center gap-2 text-white">
-            <span class="text-5xl font-bold">{day.day_number}</span>
+            <span class="text-5xl font-bold font-serif">{day.day_number}</span>
             <svg class="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
                     stroke-linecap="round"
@@ -341,9 +341,9 @@
         </div>
 
         <div class="relative z-10 flex flex-col items-center gap-2">
-            <span class="text-5xl font-bold" style="color: {themeColors.dark};">{day.day_number}</span>
+            <span class="text-5xl font-bold font-serif" style="color: {themeColors.dark};">{day.day_number}</span>
             {#if canUnlock}
-                <span class="text-xs font-medium" style="color: {themeColors.dark};">Tap to open</span>
+                <span class="text-xs font-medium font-serif" style="color: {themeColors.dark};">Tap to open</span>
             {:else if countdown}
                 <div class="flex flex-col items-center gap-0.5">
                     <span class="text-xs font-medium font-mono leading-tight" style="color: {themeColors.dark};">

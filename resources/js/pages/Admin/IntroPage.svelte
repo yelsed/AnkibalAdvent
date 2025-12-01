@@ -44,7 +44,7 @@
     <div class="mx-auto max-w-4xl space-y-8 p-6">
         <Card class="border-pink-200">
             <CardHeader>
-                <CardTitle class="text-3xl font-bold text-pink-700">
+                <CardTitle class="text-3xl font-bold text-pink-700 font-display">
                     {t('admin.intro_page')}
                 </CardTitle>
                 <CardDescription class="text-pink-800">

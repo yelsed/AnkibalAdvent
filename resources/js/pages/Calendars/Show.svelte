@@ -310,8 +310,8 @@
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
                     </svg>
                     <div class="flex-1">
-                        <p class="font-semibold text-blue-900">{t('calendar.admin_view')}</p>
-                        <p class="text-sm text-blue-700">
+                        <p class="font-semibold text-blue-900 font-serif">{t('calendar.admin_view')}</p>
+                        <p class="text-sm text-blue-700 font-serif">
                             {#if calendar.owner || calendar.user}
                                 {@const owner = calendar.owner || calendar.user}
                                 {t('calendar.viewing_calendar_owned_by', { name: owner.name, email: owner.email })}
@@ -346,9 +346,9 @@
                     {/if}
                 </div>
                 {#if calendar.description}
-                    <p class="mt-2 text-gray-600">{calendar.description}</p>
+                    <p class="mt-2 text-gray-600 font-serif">{calendar.description}</p>
                 {/if}
-                <div class="mt-1 flex flex-wrap gap-4 text-sm text-gray-500">
+                <div class="mt-1 flex flex-wrap gap-4 text-sm text-gray-500 font-serif">
                     <span>{t('common.year')}: {calendar.year}</span>
                     {#if isAdmin && (calendar.owner || calendar.user)}
                         {@const owner = calendar.owner || calendar.user}
@@ -415,15 +415,15 @@
             >
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
-                        <h3 class="text-lg font-semibold" style="color: {themeColors.darker};">
+                        <h3 class="text-lg font-semibold font-serif" style="color: {themeColors.darker};">
                             {t('calendar.recipient')}
                         </h3>
                         {#if calendar.recipient}
-                            <p class="mt-1 text-sm text-gray-600">
+                            <p class="mt-1 text-sm text-gray-600 font-serif">
                                 {t('calendar.invited_recipient', { email: calendar.recipient.email })}
                             </p>
                         {:else}
-                            <p class="mt-1 text-sm text-gray-600">
+                            <p class="mt-1 text-sm text-gray-600 font-serif">
                                 {t('calendar.no_recipient_yet')}
                             </p>
                         {/if}
@@ -503,10 +503,10 @@
 
                 {#if invitationAcceptUrl}
                     <div class="mt-4 rounded-lg border border-pink-200 bg-pink-50 p-4">
-                        <p class="text-sm font-semibold text-pink-800">
+                        <p class="text-sm font-semibold text-pink-800 font-serif">
                             {t('calendar.share_invitation_link')}
                         </p>
-                        <p class="mt-1 text-xs text-pink-800">
+                        <p class="mt-1 text-xs text-pink-800 font-serif">
                             {t('calendar.share_invitation_link_description')}
                         </p>
                         <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -532,19 +532,19 @@
         <!-- Info Banner -->
         {#if calendarDebugEnabled && debugMode}
             <div class="rounded-lg bg-yellow-100 border-2 border-yellow-400 p-4 text-center">
-                <p class="text-yellow-800 font-semibold">
+                <p class="text-yellow-800 font-semibold font-serif">
                     {t('calendar.debug_mode_all_days')}
                 </p>
             </div>
         {:else if !isDecember}
             <div class="rounded-lg p-4 text-center" style="background-color: {themeColors.light};">
-                <p style="color: {themeColors.darker};">
+                <p class="font-serif" style="color: {themeColors.darker};">
                     <span class="font-semibold">{t('calendar.note')}:</span> {t('calendar.days_only_unlock_december')}
                 </p>
             </div>
         {:else}
             <div class="rounded-lg p-4 text-center" style="background-color: {themeColors.light};">
-                <p style="color: {themeColors.darker};">
+                <p class="font-serif" style="color: {themeColors.darker};">
                     {t('calendar.can_unlock_days', { day: currentDay })}
                 </p>
             </div>
@@ -556,7 +556,7 @@
                 class="rounded-lg border p-4"
                 style="border-color: {themeColors.lighter}; background-color: {themeColors.light};"
             >
-                <h3 class="mb-3 text-lg font-semibold" style="color: {themeColors.darker};">
+                <h3 class="mb-3 text-lg font-semibold font-serif" style="color: {themeColors.darker};">
                     {t('calendar.calendar_music')}
                 </h3>
                 <AudioPlayer audioUrl={calendar.audio_url} loop={true} themeColor={calendar.theme_color} />
@@ -564,7 +564,7 @@
         {/if}
 
         <!-- Calendar Grid -->
-        <div class="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-4 lg:grid-cols-6">
+        <div class="grid grid-cols-2 gap-6 md:grid-cols-4 lg:grid-cols-6">
             {#each calendar.days as day (day.id)}
                 {@const dayTheme = getThemeForDay(
                     calendar.theme_type || 'single',
@@ -591,53 +591,53 @@
             style="background-color: {themeColors.light};"
         >
             <div class="text-center">
-                <p class="text-3xl font-bold" style="color: {themeColors.dark};">
+                <p class="text-3xl font-bold font-serif" style="color: {themeColors.dark};">
                     {calendar.days.filter(d => d.unlocked_at).length}
                 </p>
-                <p class="text-sm text-gray-600">{t('calendar.days_unlocked')}</p>
+                <p class="text-sm text-gray-600 font-serif">{t('calendar.days_unlocked')}</p>
             </div>
             <div class="text-center">
-                <p class="text-3xl font-bold" style="color: {themeColors.dark};">
+                <p class="text-3xl font-bold font-serif" style="color: {themeColors.dark};">
                     {calendar.days.length - calendar.days.filter(d => d.unlocked_at).length}
                 </p>
-                <p class="text-sm text-gray-600">{t('calendar.days_remaining')}</p>
+                <p class="text-sm text-gray-600 font-serif">{t('calendar.days_remaining')}</p>
             </div>
             <div class="col-span-2 text-center sm:col-span-1">
-                <p class="text-3xl font-bold" style="color: {themeColors.dark};">
+                <p class="text-3xl font-bold font-serif" style="color: {themeColors.dark};">
                     {Math.round((calendar.days.filter(d => d.unlocked_at).length / calendar.days.length) * 100)}%
                 </p>
-                <p class="text-sm text-gray-600">{t('calendar.complete')}</p>
+                <p class="text-sm text-gray-600 font-serif">{t('calendar.complete')}</p>
             </div>
         </div>
 
         <!-- Admin Stats -->
         {#if isAdmin}
             <div class="rounded-lg border-2 border-blue-200 bg-blue-50 p-6">
-                <h3 class="mb-4 text-lg font-semibold text-blue-900">{t('calendar.admin_statistics')}</h3>
+                <h3 class="mb-4 text-lg font-semibold text-blue-900 font-serif">{t('calendar.admin_statistics')}</h3>
                 <div class="grid grid-cols-2 gap-4 sm:grid-cols-4">
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-blue-700">
+                        <p class="text-2xl font-bold text-blue-700 font-serif">
                             {calendar.days.filter(d => d.content_text && d.content_text !== t('calendar.gift_hasnt_setup')).length}
                         </p>
-                        <p class="text-xs text-blue-600">{t('calendar.days_with_content')}</p>
+                        <p class="text-xs text-blue-600 font-serif">{t('calendar.days_with_content')}</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-blue-700">
+                        <p class="text-2xl font-bold text-blue-700 font-serif">
                             {calendar.days.filter(d => d.gift_type === 'image_text').length}
                         </p>
-                        <p class="text-xs text-blue-600">{t('calendar.image_days')}</p>
+                        <p class="text-xs text-blue-600 font-serif">{t('calendar.image_days')}</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-blue-700">
+                        <p class="text-2xl font-bold text-blue-700 font-serif">
                             {calendar.days.filter(d => d.gift_type === 'product').length}
                         </p>
-                        <p class="text-xs text-blue-600">{t('calendar.product_days')}</p>
+                        <p class="text-xs text-blue-600 font-serif">{t('calendar.product_days')}</p>
                     </div>
                     <div class="text-center">
-                        <p class="text-2xl font-bold text-blue-700">
+                        <p class="text-2xl font-bold text-blue-700 font-serif">
                             {calendar.days.filter(d => !d.content_text || d.content_text === t('calendar.gift_hasnt_setup')).length}
                         </p>
-                        <p class="text-xs text-blue-600">{t('calendar.days_to_setup')}</p>
+                        <p class="text-xs text-blue-600 font-serif">{t('calendar.days_to_setup')}</p>
                     </div>
                 </div>
             </div>
