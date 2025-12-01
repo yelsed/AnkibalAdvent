@@ -28,4 +28,7 @@ return [
     'this_action_cannot_undone' => 'Deze actie kan niet ongedaan worden gemaakt.',
     'audio_library_description' => 'Beheer je muziekbibliotheek voor kalenderdagen',
     'calendar_management' => 'Kalenderbeheer',
+    'intro_page' => 'Introductietekst',
+    'intro_page_description' => 'Beheer de uitleg die gebruikers zien voordat ze hun kalenderoverzicht openen.',
+    'intro_page_hint' => 'Schrijf in warme, moederlijke taal. Gebruik korte alinea’s om uit te leggen wat gebruikers gaan zien.',
 ];
