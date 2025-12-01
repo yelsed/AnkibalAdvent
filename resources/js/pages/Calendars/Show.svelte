@@ -84,9 +84,17 @@
         isAdmin: boolean;
         isOwner: boolean;
         isRecipient?: boolean;
+        invitationAcceptUrl?: string | null;
     }
 
-    let { calendar: initialCalendar, canManage, isAdmin, isOwner, isRecipient = false }: Props = $props();
+    let {
+        calendar: initialCalendar,
+        canManage,
+        isAdmin,
+        isOwner,
+        isRecipient = false,
+        invitationAcceptUrl = null,
+    }: Props = $props();
 
     // Convert calendar prop to state so we can mutate it reactively
     let calendar = $state(initialCalendar);
@@ -108,6 +116,7 @@
     let justUnlocked = $state(false);
     let currentTime = $state(new Date());
     let inviteDialogOpen = $state(false);
+    let invitationLinkCopied = $state(false);
 
     // Check if debug mode is enabled from server config
     const calendarDebugEnabled = $derived(($page.props as any)?.calendarDebugEnabled ?? false);
@@ -176,6 +185,25 @@
 
         return map;
     });
+
+    async function copyInvitationLink() {
+        if (!invitationAcceptUrl) {
+            return;
+        }
+
+        try {
+            if (typeof navigator !== 'undefined' && navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(invitationAcceptUrl);
+                invitationLinkCopied = true;
+
+                setTimeout(() => {
+                    invitationLinkCopied = false;
+                }, 2000);
+            }
+        } catch (error) {
+            console.error('Failed to copy invitation link', error);
+        }
+    }
 
     function canUnlockDay(day: CalendarDay): boolean {
         if (day.unlocked_at) {
@@ -472,6 +500,32 @@
                         </DialogContent>
                     </Dialog>
                 </div>
+
+                {#if invitationAcceptUrl}
+                    <div class="mt-4 rounded-lg border border-pink-200 bg-pink-50 p-4">
+                        <p class="text-sm font-semibold text-pink-800">
+                            {t('calendar.share_invitation_link')}
+                        </p>
+                        <p class="mt-1 text-xs text-pink-800">
+                            {t('calendar.share_invitation_link_description')}
+                        </p>
+                        <div class="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center">
+                            <code class="flex-1 break-all rounded bg-white/80 px-3 py-2 text-xs text-pink-900">
+                                {invitationAcceptUrl}
+                            </code>
+                            <Button
+                                type="button"
+                                variant="outline"
+                                class="mt-2 w-full border-pink-300 text-pink-700 hover:bg-pink-100 sm:mt-0 sm:w-auto"
+                                onclick={copyInvitationLink}
+                            >
+                                {invitationLinkCopied
+                                    ? t('calendar.link_copied')
+                                    : t('calendar.copy_link')}
+                            </Button>
+                        </div>
+                    </div>
+                {/if}
             </div>
         {/if}
 

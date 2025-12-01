@@ -1,11 +1,23 @@
 <?php
 
 use App\Models\Calendar;
+use App\Models\Invitation;
 use App\Models\User;
 
 test('authenticated user can view their calendars', function () {
     $user = User::factory()->create();
-    Calendar::factory()->count(3)->create(['user_id' => $user->id]);
+
+    $calendarData = [
+        'owner_id' => $user->id,
+        'title' => 'My Advent Calendar 2025',
+        'year' => 2025,
+        'description' => 'A special calendar',
+        'theme_color' => '#ec4899',
+    ];
+
+    Calendar::query()->create($calendarData);
+    Calendar::query()->create($calendarData);
+    Calendar::query()->create($calendarData);
 
     $response = $this->actingAs($user)->get('/calendars');
 
@@ -30,19 +42,25 @@ test('authenticated user can create a calendar', function () {
     $response->assertRedirect();
 
     $this->assertDatabaseHas('calendars', [
-        'user_id' => $user->id,
+        'owner_id' => $user->id,
         'title' => 'My Advent Calendar 2025',
         'year' => 2025,
     ]);
 
     // Should create 31 days
-    $calendar = Calendar::where('user_id', $user->id)->first();
+    $calendar = Calendar::where('owner_id', $user->id)->first();
     expect($calendar->days)->toHaveCount(31);
 });
 
 test('authenticated user can view their own calendar', function () {
     $user = User::factory()->create();
-    $calendar = Calendar::factory()->create(['user_id' => $user->id]);
+    $calendar = Calendar::query()->create([
+        'owner_id' => $user->id,
+        'title' => 'My Advent Calendar 2025',
+        'year' => 2025,
+        'description' => 'A special calendar',
+        'theme_color' => '#ec4899',
+    ]);
 
     $response = $this->actingAs($user)->get("/calendars/{$calendar->id}");
 
@@ -56,7 +74,13 @@ test('authenticated user can view their own calendar', function () {
 test('user cannot view another users calendar', function () {
     $user1 = User::factory()->create();
     $user2 = User::factory()->create();
-    $calendar = Calendar::factory()->create(['user_id' => $user1->id]);
+    $calendar = Calendar::query()->create([
+        'owner_id' => $user1->id,
+        'title' => 'Other calendar',
+        'year' => 2025,
+        'description' => null,
+        'theme_color' => '#ec4899',
+    ]);
 
     $response = $this->actingAs($user2)->get("/calendars/{$calendar->id}");
 
@@ -65,7 +89,13 @@ test('user cannot view another users calendar', function () {
 
 test('authenticated user can delete their own calendar', function () {
     $user = User::factory()->create();
-    $calendar = Calendar::factory()->create(['user_id' => $user->id]);
+    $calendar = Calendar::query()->create([
+        'owner_id' => $user->id,
+        'title' => 'My calendar',
+        'year' => 2025,
+        'description' => null,
+        'theme_color' => '#ec4899',
+    ]);
 
     $response = $this->actingAs($user)->delete("/calendars/{$calendar->id}");
 
@@ -76,7 +106,13 @@ test('authenticated user can delete their own calendar', function () {
 test('user cannot delete another users calendar', function () {
     $user1 = User::factory()->create();
     $user2 = User::factory()->create();
-    $calendar = Calendar::factory()->create(['user_id' => $user1->id]);
+    $calendar = Calendar::query()->create([
+        'owner_id' => $user1->id,
+        'title' => 'Other calendar',
+        'year' => 2025,
+        'description' => null,
+        'theme_color' => '#ec4899',
+    ]);
 
     $response = $this->actingAs($user2)->delete("/calendars/{$calendar->id}");
 
@@ -112,4 +148,29 @@ test('guest cannot access calendars', function () {
     $response->assertRedirect('/login');
 });
 
+test('calendar show includes invitation accept url when active invitation exists', function () {
+    $owner = User::factory()->create();
 
+    $calendar = Calendar::query()->create([
+        'owner_id' => $owner->id,
+        'title' => 'My Advent Calendar 2025',
+        'year' => 2025,
+        'description' => 'A special calendar',
+        'theme_color' => '#ec4899',
+    ]);
+
+    $invitation = Invitation::query()->create([
+        'email' => 'recipient@example.com',
+        'token' => 'test-token-123',
+        'calendar_id' => $calendar->id,
+        'expires_at' => now()->addDay(),
+    ]);
+
+    $response = $this->actingAs($owner)->get("/calendars/{$calendar->id}");
+
+    $expectedUrl = route('invitations.accept', ['token' => $invitation->token], absolute: true);
+
+    $response->assertInertia(fn ($page) => $page->component('Calendars/Show')
+        ->where('invitationAcceptUrl', $expectedUrl)
+    );
+});

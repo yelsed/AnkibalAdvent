@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\StoreCalendarRequest;
 use App\Models\Calendar;
+use App\Models\Invitation;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -75,12 +76,24 @@ class CalendarController extends Controller
         $isOwner = $user->id === $calendar->owner_id;
         $isRecipient = $user->id === $calendar->recipient_id;
 
+        $activeInvitation = Invitation::query()
+            ->where('calendar_id', $calendar->id)
+            ->whereNull('accepted_at')
+            ->where('expires_at', '>', now())
+            ->orderByDesc('expires_at')
+            ->first();
+
+        $invitationAcceptUrl = $activeInvitation
+            ? route('invitations.accept', ['token' => $activeInvitation->token], absolute: true)
+            : null;
+
         return Inertia::render('Calendars/Show', [
             'calendar' => $calendar,
             'canManage' => $isAdmin || $isOwner,
             'isAdmin' => $isAdmin,
             'isOwner' => $isOwner,
             'isRecipient' => $isRecipient,
+            'invitationAcceptUrl' => $invitationAcceptUrl,
         ]);
     }
 

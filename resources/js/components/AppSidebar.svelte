@@ -38,6 +38,11 @@
             href: '/admin/calendars',
             icon: Settings,
         },
+        {
+            title: t('admin.intro_page'),
+            href: '/admin/intro',
+            icon: LayoutGrid,
+        },
     ]);
 
     const footerNavItems: NavItem[] = $derived([

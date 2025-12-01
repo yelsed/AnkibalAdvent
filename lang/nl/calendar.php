@@ -61,6 +61,9 @@ return [
     'unlocked' => 'Ontgrendeld',
     'locked' => 'Vergrendeld',
     'progress' => 'Voortgang',
+    'intro_highlight' => 'Je krijgt een persoonlijke adventskalender met 31 liefdevolle dagen vol kleine cadeautjes, woorden en verrassingen.',
+    'go_to_my_calendars' => 'Ga naar mijn kalenders',
+    'intro_cta_hint' => 'Daar zie je al jouw adventskalenders en kun je de dagen één voor één openen in december.',
     'manage_calendar_days' => 'Kalenderdagen Beheren',
     'back_to_calendar' => '← Terug naar Kalender',
     'days_unlocked' => 'Dagen Ontgrendeld',
@@ -108,4 +111,8 @@ return [
     'recipient' => 'Ontvanger',
     'no_recipient_yet' => 'Nog geen ontvanger uitgenodigd',
     'invited_recipient' => 'Uitgenodigde ontvanger: :email',
+    'share_invitation_link' => 'Uitnodigingslink delen',
+    'share_invitation_link_description' => 'Je kunt deze link kopiëren en via WhatsApp, e-mail of een ander kanaal naar de ontvanger sturen.',
+    'copy_link' => 'Link kopiëren',
+    'link_copied' => 'Link gekopieerd!',
 ];

@@ -46,11 +46,11 @@ class RegisteredUserController extends Controller
 
         Auth::login($user);
 
-        // Redirect admins to dashboard, regular users to calendars
+        // Redirect admins to dashboard, regular users to intro page
         if ($user->is_admin) {
             return to_route('dashboard');
         }
 
-        return to_route('calendars.index');
+        return to_route('intro');
     }
 }

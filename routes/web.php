@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\CalendarController;
 use App\Http\Controllers\CalendarDayController;
 use App\Http\Controllers\InvitationController;
+use App\Http\Controllers\IntroPageController;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -14,12 +15,15 @@ Route::get('/', function () {
             return redirect()->route('dashboard');
         }
 
-        return redirect()->route('calendars.index');
+        return redirect()->route('intro');
     }
 
     // Show login page for unauthenticated users
     return app(\App\Http\Controllers\Auth\AuthenticatedSessionController::class)->create(request());
 })->name('home');
+
+Route::middleware(['auth'])->get('/intro', [IntroPageController::class, 'show'])
+    ->name('intro');
 
 Route::get('dashboard', function () {
     return Inertia::render('Dashboard');
@@ -48,6 +52,12 @@ Route::middleware(['auth'])->group(function () {
     Route::middleware('can:admin')->group(function () {
         Route::get('admin/calendars', [AdminController::class, 'index'])
             ->name('admin.calendars.index');
+
+        Route::get('admin/intro', [IntroPageController::class, 'edit'])
+            ->name('admin.intro.edit');
+
+        Route::put('admin/intro', [IntroPageController::class, 'update'])
+            ->name('admin.intro.update');
 
         Route::post('admin/calendars', [AdminController::class, 'store'])
             ->name('admin.calendars.store');
