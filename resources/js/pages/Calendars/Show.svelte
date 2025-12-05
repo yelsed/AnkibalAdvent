@@ -54,6 +54,7 @@
         audio_url: string | null;
         unlocked_at: string | null;
         theme_override?: any;
+        allow_early_unlock?: boolean;
     }
 
     interface User {
@@ -225,6 +226,12 @@
             return false;
         }
 
+        // Check if early unlock is allowed for this day (set by admin)
+        // If allow_early_unlock is enabled, the day can always be unlocked (in December)
+        if (day.allow_early_unlock) {
+            return true;
+        }
+
         // Can only unlock if day_number <= current day
         if (day.day_number > currentDay) {
             return false;
@@ -314,7 +321,11 @@
                         <p class="text-sm text-blue-700 font-serif">
                             {#if calendar.owner || calendar.user}
                                 {@const owner = calendar.owner || calendar.user}
-                                {t('calendar.viewing_calendar_owned_by', { name: owner.name, email: owner.email })}
+                                {#if owner}
+                                    {t('calendar.viewing_calendar_owned_by', { name: owner.name, email: owner.email })}
+                                {:else}
+                                    {t('calendar.viewing_calendar')}
+                                {/if}
                             {:else}
                                 {t('calendar.viewing_calendar')}
                             {/if}
@@ -350,14 +361,17 @@
                 {/if}
                 <div class="mt-1 flex flex-wrap gap-4 text-sm text-gray-500 font-serif">
                     <span>{t('common.year')}: {calendar.year}</span>
-                    {#if isAdmin && (calendar.owner || calendar.user)}
-                        {@const owner = calendar.owner || calendar.user}
-                        <span>• {t('calendar.creator')}: {owner.name}</span>
+                    {#if isAdmin}
+                        {#if calendar.owner}
+                            <span>• {t('calendar.creator')}: {calendar.owner.name}</span>
+                        {:else if calendar.user}
+                            <span>• {t('calendar.creator')}: {calendar.user.name}</span>
+                        {/if}
                     {/if}
                 </div>
             </div>
 
-            <div class="flex gap-2">
+            <div class="flex gap-2 flex-wrap">
                 <!-- Debug Mode Toggle (only shown if enabled in config) -->
                 {#if calendarDebugEnabled}
                 <Button

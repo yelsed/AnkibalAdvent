@@ -36,6 +36,16 @@ class CalendarDayController extends Controller
             $debugMode = request()->boolean('debug_mode') || config('app.calendar_debug_mode');
         }
 
+        // Debug logging
+        Log::info('Attempting to unlock day', [
+            'day_id' => $calendarDay->id,
+            'day_number' => $calendarDay->day_number,
+            'allow_early_unlock' => $calendarDay->allow_early_unlock,
+            'current_day' => now()->day,
+            'current_month' => now()->month,
+            'can_unlock' => $calendarDay->canBeUnlocked(Auth::user(), $debugMode),
+        ]);
+
         if (! $calendarDay->canBeUnlocked(Auth::user(), $debugMode)) {
             return response()->json([
                 'message' => __('calendar.this_day_cannot_unlocked_yet'),
@@ -98,6 +108,21 @@ class CalendarDayController extends Controller
         } elseif (isset($data['audio_url']) && $data['audio_url']) {
             $data['audio_file_id'] = null;
         }
+
+        // Handle allow_early_unlock: ensure it's always set (checkbox sends "0" or "1" as string)
+        if (!isset($data['allow_early_unlock']) || $data['allow_early_unlock'] === '0' || $data['allow_early_unlock'] === 0 || $data['allow_early_unlock'] === false) {
+            $data['allow_early_unlock'] = false;
+        } else {
+            // Convert to boolean - checkbox sends "1" when checked
+            $data['allow_early_unlock'] = (bool) $data['allow_early_unlock'];
+        }
+        
+        Log::info('Allow early unlock value', [
+            'raw' => $request->input('allow_early_unlock'),
+            'processed' => $data['allow_early_unlock'],
+            'day_id' => $calendarDay->id,
+            'day_number' => $calendarDay->day_number,
+        ]);
 
         // Always update, even if only image was uploaded
         $calendarDay->update($data);

@@ -23,6 +23,7 @@ class CalendarDay extends Model
         'audio_file_id',
         'unlocked_at',
         'theme_override',
+        'allow_early_unlock',
     ];
 
     protected function casts(): array
@@ -31,6 +32,7 @@ class CalendarDay extends Model
             'day_number' => 'integer',
             'unlocked_at' => 'datetime',
             'theme_override' => 'array',
+            'allow_early_unlock' => 'boolean',
         ];
     }
 
@@ -79,11 +81,16 @@ class CalendarDay extends Model
         $currentDay = $now->day;
         $currentMonth = $now->month;
         $currentHour = $now->hour;
-        $currentMinute = $now->minute;
 
         // Can only unlock in December
         if ($currentMonth !== 12) {
             return false;
+        }
+
+        // Check if early unlock is allowed for this day (set by admin)
+        // If allow_early_unlock is enabled, the day can always be unlocked (in December)
+        if ($this->allow_early_unlock) {
+            return true;
         }
 
         // Can only unlock if day_number <= current day

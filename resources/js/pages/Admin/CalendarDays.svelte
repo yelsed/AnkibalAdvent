@@ -28,6 +28,7 @@
         audio_url: string | null;
         audio_file_id: number | null;
         unlocked_at: string | null;
+        allow_early_unlock: boolean;
     }
 
     interface Calendar {
@@ -55,10 +56,10 @@
     let selectedDayIndex = $state(0);
     let selectedDay = $derived(calendar?.days?.[selectedDayIndex]);
     let currentGiftType = $state<string>('text');
-    let giftTypeHiddenInput: HTMLInputElement;
     let audioSourceType = $state<'none' | 'library' | 'url'>('none');
     let selectedAudioFileId = $state<number | null>(null);
     let audioUrlInput = $state('');
+    let allowEarlyUnlock = $state(false);
 
     // Ensure selectedDayIndex is valid and update currentGiftType when day changes
     $effect(() => {
@@ -73,14 +74,7 @@
         }
     });
 
-    // Sync hidden input value when currentGiftType changes
-    $effect(() => {
-        if (giftTypeHiddenInput) {
-            giftTypeHiddenInput.value = currentGiftType;
-        }
-    });
-
-    // Update audio source type when selected day changes
+    // Update audio source type and allow_early_unlock when selected day changes
     let previousDayId = $state<number | null>(null);
     $effect(() => {
         // Only update when the day actually changes (by ID)
@@ -98,9 +92,11 @@
                 selectedAudioFileId = null;
                 audioUrlInput = '';
             }
+            allowEarlyUnlock = selectedDay.allow_early_unlock || false;
             previousDayId = selectedDay.id;
         } else if (!selectedDay) {
             previousDayId = null;
+            allowEarlyUnlock = false;
         }
     });
 
@@ -189,7 +185,7 @@
                                 <div class="space-y-4">
                                     <!-- Hidden inputs for method spoofing and gift_type -->
                                     <input type="hidden" name="_method" value="put" />
-                                    <input type="hidden" name="gift_type" bind:this={giftTypeHiddenInput} />
+                                    <input type="hidden" name="gift_type" bind:value={currentGiftType} />
 
                                     <!-- Gift Type -->
                                     <div>
@@ -448,6 +444,33 @@
                                             <p class="italic text-gray-400">{t('calendar.no_description_yet')}</p>
                                         {:else}
                                             <p class="italic text-gray-400">{t('calendar.no_content_yet')}</p>
+                                        {/if}
+                                    </div>
+
+                                    <!-- Allow Early Unlock -->
+                                    <div class="rounded-lg border-2 border-pink-200 bg-pink-50 p-4">
+                                        <div class="flex items-center gap-2">
+                                            <input
+                                                type="checkbox"
+                                                id="allow_early_unlock"
+                                                name="allow_early_unlock"
+                                                bind:checked={allowEarlyUnlock}
+                                                value="1"
+                                                class="h-4 w-4 rounded border-gray-300 text-pink-600 focus:ring-pink-500"
+                                            />
+                                            <Label
+                                                for="allow_early_unlock"
+                                                class="cursor-pointer font-serif text-sm text-gray-700"
+                                            >
+                                                {t('calendar.allow_early_unlock')}
+                                            </Label>
+                                        </div>
+                                        <p class="mt-2 text-xs text-gray-500 font-serif">
+                                            {t('calendar.allow_early_unlock_description')}
+                                        </p>
+                                        <!-- Hidden input to ensure false is sent when checkbox is unchecked -->
+                                        {#if !allowEarlyUnlock}
+                                            <input type="hidden" name="allow_early_unlock" value="0" />
                                         {/if}
                                     </div>
 

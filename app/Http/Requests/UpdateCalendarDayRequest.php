@@ -29,6 +29,7 @@ class UpdateCalendarDayRequest extends FormRequest
             'product_code' => ['required_if:gift_type,product', 'nullable', 'string', 'max:255'],
             'audio_url' => ['nullable', 'url', 'max:2048'],
             'audio_file_id' => ['nullable', 'exists:audio_files,id'],
+            'allow_early_unlock' => ['nullable', 'boolean'],
         ];
     }
 

@@ -115,4 +115,6 @@ return [
     'share_invitation_link_description' => 'Je kunt deze link kopiëren en via WhatsApp, e-mail of een ander kanaal naar de ontvanger sturen.',
     'copy_link' => 'Link kopiëren',
     'link_copied' => 'Link gekopieerd!',
+    'allow_early_unlock' => 'Sta vroeg openen toe',
+    'allow_early_unlock_description' => 'Als deze optie is ingeschakeld, kan deze dag één dag eerder worden geopend (bijv. dag 6 openen op dag 5).',
 ];
