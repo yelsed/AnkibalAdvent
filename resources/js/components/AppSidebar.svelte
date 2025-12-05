@@ -20,11 +20,11 @@
     const isAdmin = $derived(user?.is_admin ?? false);
 
     const mainNavItems: NavItem[] = $derived([
-        {
+        ...(isAdmin ? [{
             title: t('common.dashboard'),
             href: '/dashboard',
             icon: LayoutGrid,
-        },
+        }] : []),
         {
             title: t('common.advent_calendars'),
             href: '/calendars',
@@ -64,7 +64,7 @@
         <SidebarMenu>
             <SidebarMenuItem>
                 <SidebarMenuButton size="lg">
-                    <Link href={route('dashboard')}>
+                    <Link href={isAdmin ? route('dashboard') : route('calendars.index')}>
                         <AppLogo />
                     </Link>
                 </SidebarMenuButton>

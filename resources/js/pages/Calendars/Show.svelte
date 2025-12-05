@@ -418,6 +418,32 @@
                         {t('calendar.manage_days')}
                     </Button>
                 {/if}
+
+                <!-- PDF Export Button -->
+                <Button
+                    onclick={() => {
+                        window.location.href = route('calendars.export-pdf', calendar.id);
+                    }}
+                    variant="outline"
+                    style="border-color: {themeColors.lighter}; color: {themeColors.dark};"
+                    onmouseenter={(e) => {
+                        e.currentTarget.style.backgroundColor = themeColors.light;
+                    }}
+                    onmouseleave={(e) => {
+                        e.currentTarget.style.backgroundColor = 'transparent';
+                    }}
+                    title={t('calendar.export_to_pdf_description')}
+                >
+                    <svg class="mr-2 h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                    </svg>
+                    {t('calendar.export_to_pdf')}
+                </Button>
             </div>
         </div>
 
