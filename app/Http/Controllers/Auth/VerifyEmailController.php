@@ -22,7 +22,7 @@ class VerifyEmailController extends Controller
                 return redirect($intended.'?verified=1');
             }
 
-            return redirect()->route($user->is_admin ? 'dashboard' : 'calendars.index', ['verified' => 1]);
+            return redirect()->route($user->is_admin ? 'dashboard' : 'intro', ['verified' => 1]);
         }
 
         $request->fulfill();

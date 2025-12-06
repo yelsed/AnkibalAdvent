@@ -97,13 +97,13 @@ class InvitationController extends Controller
 
         Auth::login($user);
 
-        // Redirect admins to dashboard, regular users to calendars index
+        // Redirect admins to dashboard, regular users to intro page
         if ($user->is_admin) {
             return redirect()->route('dashboard')
                 ->with('success', 'Welkom! Je account is aangemaakt.');
         }
 
-        return redirect()->route('calendars.index')
+        return redirect()->route('intro')
             ->with('success', 'Welkom! Je account is aangemaakt.');
     }
 
