@@ -11,7 +11,8 @@ use Inertia\Inertia;
 Route::get('/', function () {
     // Redirect authenticated users to their appropriate page
     if (auth()->check()) {
-        if (auth()->user()->is_admin) {
+        $user = auth()->user();
+        if ($user->is_admin) {
             return redirect()->route('dashboard');
         }
 
@@ -43,6 +44,9 @@ Route::middleware(['auth'])->group(function () {
 
     Route::post('calendar-days/{calendarDay}/unlock', [CalendarDayController::class, 'unlock'])
         ->name('calendar-days.unlock');
+
+    Route::get('calendars/{calendar}/export-pdf', [CalendarController::class, 'exportPdf'])
+        ->name('calendars.export-pdf');
 
     // Invite recipient to calendar (owners only)
     Route::post('calendars/{calendar}/invite-recipient', [InvitationController::class, 'inviteRecipient'])

@@ -10,7 +10,6 @@
     import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
     import UserMenuContent from '@/components/UserMenuContent.svelte';
     import { getInitials } from '@/hooks/useInitials';
-    import { dashboard } from '@/routes';
     import type { BreadcrumbItem } from '@/types';
     import { Link, page } from '@inertiajs/svelte';
     import { cva } from 'class-variance-authority';
@@ -46,12 +45,15 @@
         `group inline-flex h-10 w-max items-center justify-center rounded-md bg-background px-4 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground focus:bg-accent focus:text-accent-foreground focus:outline-hidden disabled:pointer-events-none disabled:opacity-50 data-active:bg-accent/50 data-[state=open]:bg-accent/50`,
     );
 
+    let user = $derived($page.props.auth.user);
+    const isAdmin = $derived(user?.is_admin ?? false);
+
     const mainNavItems: NavItem[] = $derived([
-        {
+        ...(isAdmin ? [{
             title: t('common.dashboard'),
             href: '/dashboard',
             icon: LayoutGrid,
-        },
+        }] : []),
     ]);
 
     const rightNavItems: NavItem[] = $derived([
@@ -114,7 +116,7 @@
                 </Sheet>
             </div>
 
-            <Link href={dashboard()} class="flex items-center gap-x-2">
+            <Link href={isAdmin ? route('dashboard') : route('calendars.index')} class="flex items-center gap-x-2">
                 <AppLogo />
             </Link>
 

@@ -17,7 +17,7 @@ class CalendarFactory extends Factory
     public function definition(): array
     {
         return [
-            'user_id' => \App\Models\User::factory(),
+            'owner_id' => \App\Models\User::factory(),
             'title' => fake()->words(3, true) . ' Advent Calendar',
             'year' => now()->year,
             'description' => fake()->sentence(),

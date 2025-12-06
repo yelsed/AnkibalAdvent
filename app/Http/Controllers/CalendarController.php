@@ -5,8 +5,10 @@ namespace App\Http\Controllers;
 use App\Http\Requests\StoreCalendarRequest;
 use App\Models\Calendar;
 use App\Models\Invitation;
+use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Response as HttpResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -108,5 +110,37 @@ class CalendarController extends Controller
 
         return redirect()->route('calendars.index')
             ->with('success', __('calendar.calendar_deleted_successfully'));
+    }
+
+    /**
+     * Export calendar to PDF.
+     */
+    public function exportPdf(Calendar $calendar): HttpResponse
+    {
+        $this->authorize('view', $calendar);
+
+        $calendar->load(['days' => function ($query) {
+            $query->orderBy('day_number');
+        }, 'owner', 'recipient']);
+
+        // Filter days that have content (text or image)
+        $daysWithContent = $calendar->days->filter(function ($day) {
+            return ($day->content_text && $day->content_text !== __('calendar.gift_hasnt_setup'))
+                || $day->content_image_path
+                || $day->gift_type === 'product';
+        });
+
+        $pdf = Pdf::loadView('calendars.export-pdf', [
+            'calendar' => $calendar,
+            'days' => $daysWithContent,
+        ]);
+
+        $filename = sprintf(
+            '%s-%d.pdf',
+            str_replace(' ', '-', strtolower($calendar->title)),
+            $calendar->year
+        );
+
+        return $pdf->download($filename);
     }
 }
