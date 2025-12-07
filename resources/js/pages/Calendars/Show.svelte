@@ -394,7 +394,7 @@
                     </Button>
                 {/if}
 
-                {#if canManage}
+                {#if isAdmin}
                     <Button
                         onclick={goToAdmin}
                         variant="outline"

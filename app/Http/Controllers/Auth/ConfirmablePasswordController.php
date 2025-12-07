@@ -43,6 +43,6 @@ class ConfirmablePasswordController extends Controller
             return redirect($intended);
         }
 
-        return redirect()->route($user->is_admin ? 'dashboard' : 'calendars.index');
+        return redirect()->route($user->is_admin ? 'dashboard' : 'intro');
     }
 }

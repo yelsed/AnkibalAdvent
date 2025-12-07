@@ -32,7 +32,7 @@ return [
     |
     */
 
-    'lifetime' => (int) env('SESSION_LIFETIME', 44640), // 31 days (December)
+    'lifetime' => (int) env('SESSION_LIFETIME', 525600), // 1 year (365 days)
 
     'expire_on_close' => env('SESSION_EXPIRE_ON_CLOSE', false),
 
@@ -111,10 +111,12 @@ return [
     | Some session drivers must manually sweep their storage location to get
     | rid of old sessions from storage. Here are the chances that it will
     | happen on a given request. By default, the odds are 2 out of 100.
+    | We reduce this to 1 out of 1000 to prevent sessions from being cleaned
+    | up too aggressively.
     |
     */
 
-    'lottery' => [2, 100],
+    'lottery' => [1, 1000],
 
     /*
     |--------------------------------------------------------------------------

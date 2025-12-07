@@ -32,12 +32,18 @@
             margin: 5px 0;
         }
         .day-section {
-            margin-bottom: 25px;
+            margin-bottom: 0;
             page-break-inside: avoid;
+            page-break-before: always;
             border: 1px solid #f9a8d4;
             border-radius: 8px;
             padding: 15px;
             background-color: #fce7f3;
+            display: flex;
+            flex-direction: column;
+        }
+        .day-section:first-of-type {
+            page-break-before: auto;
         }
         .day-header {
             display: flex;
@@ -62,16 +68,51 @@
         .day-content {
             margin-top: 15px;
         }
-        .day-content-text {
+        .day-content-table {
+            width: 100%;
+            border-collapse: collapse;
+            table-layout: fixed;
+        }
+        .day-content-text-column {
+            width: 55%;
+            vertical-align: top;
+            padding-right: 15px;
             font-size: 14px;
             color: #555;
             line-height: 1.8;
+            overflow-wrap: break-word;
+            word-wrap: break-word;
+        }
+        .day-content-image-column {
+            width: 45%;
+            vertical-align: top;
+            padding-left: 15px;
+        }
+        .day-content-vertical {
+            display: block;
+        }
+        .day-content-vertical .day-content-image-wrapper {
             margin-bottom: 15px;
+            text-align: center;
+        }
+        .day-content-vertical .day-content-image {
+            max-height: 80mm;
+        }
+        .day-content-vertical .day-content-text-column {
+            width: 100%;
+            display: block;
+            padding-right: 0;
+        }
+        .day-content-image-wrapper {
+            width: 100%;
+            text-align: center;
         }
         .day-content-image {
             max-width: 100%;
+            max-height: 100mm;
+            width: auto;
             height: auto;
-            margin: 15px 0;
+            object-fit: contain;
             border-radius: 4px;
             border: 2px solid #f9a8d4;
         }
@@ -152,33 +193,110 @@
                 </div>
             </div>
 
-            <div class="day-content">
-                @if($day->content_image_path)
-                    @php
-                        $imagePath = storage_path('app/public/' . $day->content_image_path);
-                        $imageExists = file_exists($imagePath);
-                    @endphp
-                    @if($imageExists)
-                        <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents($imagePath)) }}" alt="{{ $day->title ?? __('calendar.day_number', ['number' => $day->day_number]) }}" class="day-content-image" />
+            @php
+                $hasText = $day->content_text && $day->content_text !== __('calendar.gift_hasnt_setup');
+                $hasImage = $day->content_image_path;
+                $hasProductCode = $day->gift_type === 'product' && $day->product_code;
+                $imagePath = $hasImage ? storage_path('app/public/' . $day->content_image_path) : null;
+                $imageExists = $hasImage && $imagePath && file_exists($imagePath);
+                $hasBoth = ($hasText || $hasProductCode) && $hasImage;
+
+                // Bepaal of tekst te lang is (> 300 woorden = gebruik verticale layout)
+                $textLength = $hasText ? str_word_count(strip_tags($day->content_text)) : 0;
+                $useVerticalLayout = $hasBoth && $textLength > 300;
+                $contentClass = !$hasBoth ? 'day-content-single-column' : ($useVerticalLayout ? 'day-content-vertical' : '');
+            @endphp
+
+            <div class="day-content {{ $contentClass }}">
+                @if($hasBoth)
+                    @if($useVerticalLayout)
+                        {{-- Verticale layout voor lange teksten: afbeelding boven, tekst onder --}}
+                        @if($imageExists)
+                            <div class="day-content-image-wrapper">
+                                <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents($imagePath)) }}" alt="{{ $day->title ?? __('calendar.day_number', ['number' => $day->day_number]) }}" class="day-content-image" />
+                            </div>
+                        @else
+                            <div class="no-content">{{ __('calendar.image_not_found') }}</div>
+                        @endif
+
+                        <div class="day-content-text-column">
+                            @if($hasText)
+                                {!! nl2br(e($day->content_text)) !!}
+                            @endif
+
+                            @if($hasProductCode)
+                                @if($hasText)
+                                    <div style="margin-top: 15px;">
+                                @endif
+                                <strong>{{ __('calendar.product_code') }}:</strong> {{ $day->product_code }}
+                                @if($hasText)
+                                    </div>
+                                @endif
+                            @endif
+                        </div>
                     @else
-                        <div class="no-content">{{ __('calendar.image_not_found') }}</div>
+                        {{-- Horizontale layout voor korte teksten: tekst links, afbeelding rechts --}}
+                        <table class="day-content-table">
+                            <tr>
+                                <td class="day-content-text-column">
+                                    @if($hasText)
+                                        {!! nl2br(e($day->content_text)) !!}
+                                    @endif
+
+                                    @if($hasProductCode)
+                                        @if($hasText)
+                                            <div style="margin-top: 15px;">
+                                        @endif
+                                        <strong>{{ __('calendar.product_code') }}:</strong> {{ $day->product_code }}
+                                        @if($hasText)
+                                            </div>
+                                        @endif
+                                    @endif
+                                </td>
+                                <td class="day-content-image-column">
+                                    @if($imageExists)
+                                        <div class="day-content-image-wrapper">
+                                            <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents($imagePath)) }}" alt="{{ $day->title ?? __('calendar.day_number', ['number' => $day->day_number]) }}" class="day-content-image" />
+                                        </div>
+                                    @else
+                                        <div class="no-content">{{ __('calendar.image_not_found') }}</div>
+                                    @endif
+                                </td>
+                            </tr>
+                        </table>
                     @endif
-                @endif
+                @else
+                    @if($hasText || $hasProductCode)
+                        <div class="day-content-text-column" style="width: 100%; display: block; padding-right: 0;">
+                            @if($hasText)
+                                {!! nl2br(e($day->content_text)) !!}
+                            @endif
 
-                @if($day->content_text && $day->content_text !== __('calendar.gift_hasnt_setup'))
-                    <div class="day-content-text">
-                        {!! nl2br(e($day->content_text)) !!}
-                    </div>
-                @endif
+                            @if($hasProductCode)
+                                @if($hasText)
+                                    <div style="margin-top: 15px;">
+                                @endif
+                                <strong>{{ __('calendar.product_code') }}:</strong> {{ $day->product_code }}
+                                @if($hasText)
+                                    </div>
+                                @endif
+                            @endif
+                        </div>
+                    @endif
 
-                @if($day->gift_type === 'product' && $day->product_code)
-                    <div class="day-content-text">
-                        <strong>{{ __('calendar.product_code') }}:</strong> {{ $day->product_code }}
-                    </div>
-                @endif
+                    @if($hasImage && !$hasText && !$hasProductCode)
+                        <div class="day-content-image-column" style="width: 100%; display: block; padding-left: 0;">
+                            @if($imageExists)
+                                <div class="day-content-image-wrapper">
+                                    <img src="data:image/jpeg;base64,{{ base64_encode(file_get_contents($imagePath)) }}" alt="{{ $day->title ?? __('calendar.day_number', ['number' => $day->day_number]) }}" class="day-content-image" />
+                                </div>
+                            @else
+                                <div class="no-content">{{ __('calendar.image_not_found') }}</div>
+                            @endif
+                        </div>
+                    @endif
 
-                @if(!$day->content_text || $day->content_text === __('calendar.gift_hasnt_setup'))
-                    @if(!$day->content_image_path && $day->gift_type !== 'product')
+                    @if(!$hasText && !$hasImage && !$hasProductCode)
                         <div class="no-content">{{ __('calendar.no_content_available') }}</div>
                     @endif
                 @endif
@@ -191,7 +309,7 @@
     @endforelse
 
     <div class="footer">
-        {{ __('calendar.exported_on') }}: {{ now()->format('d-m-Y H:i') }} | 
+        {{ __('calendar.exported_on') }}: {{ now()->format('d-m-Y H:i') }} |
         {{ __('calendar.total_days') }}: {{ $days->count() }}
     </div>
 </body>
