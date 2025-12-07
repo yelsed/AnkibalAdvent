@@ -33,15 +33,15 @@ class AuthenticatedSessionController extends Controller
 
         $request->session()->regenerate();
 
-        // Redirect admins to dashboard, regular users to calendars index (unless a safe intended URL exists)
+        // Redirect admins to dashboard, regular users to intro page (unless a safe intended URL exists)
         $user = $request->user();
         $intended = $request->session()->pull('url.intended');
 
         // Only use intended URL if it's safe for this user
         if ($intended) {
-            // If intended is dashboard and user is not admin, redirect to calendars instead
+            // If intended is dashboard and user is not admin, redirect to intro instead
             if (str_contains($intended, '/dashboard') && !$user->is_admin) {
-                return redirect()->route('calendars.index');
+                return redirect()->route('intro');
             }
 
             // If intended is calendars and user is admin, allow it (admins can view calendars too)
@@ -52,7 +52,7 @@ class AuthenticatedSessionController extends Controller
             return redirect()->route('dashboard');
         }
 
-        return redirect()->route('calendars.index');
+        return redirect()->route('intro');
     }
 
     /**

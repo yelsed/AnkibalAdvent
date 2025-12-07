@@ -16,8 +16,7 @@ Route::get('/', function () {
             return redirect()->route('dashboard');
         }
 
-        // Non-admin users go to calendars index, not intro
-        return redirect()->route('calendars.index');
+        return redirect()->route('intro');
     }
 
     // Show login page for unauthenticated users
